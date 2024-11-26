@@ -22,7 +22,12 @@ def format_str(colname, coltype, elems, operator):
     if len(elems) == 1 and elems[0] in ('ANY', '"ANY"', "'ANY'"):
         return elems[0]
 
-    # TODO: Add coltype handling logic
+    # Preprocessing - Check if string contains "" / ''
+    if coltype == ColType.STRING:
+        str_contains_quotes = lambda s : len(s) != 0 and s[0] in ("'", '"') and s[len(s)-1] in ("'", '"')
+        
+        elems = [e if str_contains_quotes(e) else f'"{e}"' for e in elems]
+
     out = [f'{colname} {operator} {e}'.strip() for e in elems]
     return ' or '.join(out)
    
@@ -30,8 +35,8 @@ def format_str(colname, coltype, elems, operator):
 def interactive_output(filename, colname, coltype, operator):
     print(f"{colname}\n=========")
     output_arr = prep_rows(filename, colname, coltype, operator)
-    for elem in output_arr:
-        input(elem)
+    for index, elem in enumerate(output_arr, 1):
+        input(f'{index}. {elem}')
 
 
 #  Execution
