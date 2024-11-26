@@ -33,16 +33,47 @@ def interactive_output(filename, colname, coltype, operator):
     for elem in output_arr:
         input(elem)
 
+#  Execution
+#  =============================================
+def create_files(foldername, inputcols, outputcols):
+     # Create files if they don't exist
+    os.makedirs('.\\{foldername}', exist_ok=True)
+
+    for elem in [*inputcols, *outputcols]:
+        colname = elem[0] if isinstance(elem, list)  else elem
+
+        filepath = get_filepath_from_colname(colname)
+        if not os.path.exists(filepath):
+            open(filepath, 'w').close()
+            input(f"{colname}.txt: Please fill in the file ")
+
+            
+def process_inputs(inputcols):
+     for elem in inputcols:
+        if isinstance(elem, list):
+            colname, operator = elem
+        else:
+            colname = elem
+            operator = "=="
+
+        filepath = get_filepath_from_colname(colname)
+        interactive_output(filepath, colname, ColType.STRING, operator)
+
+
+def process_outputs(outputcols):
+    for colname in outputcols:
+        filepath = get_filepath_from_colname(colname)
+        interactive_output(filepath, "", ColType.NUMBER, "")
+
 
 if __name__ == "__main__":
-    filename = "data.txt"
-
     class ColType(Enum):
         STRING = 1
         NUMBER = 2
         BOOLEAN = 3
 
-    input_cols = [
+    FOLDER_NAME = 'data1'
+    INPUT_COLS = [
         "SubType", 
         "BrandGroup", 
         ["LoanTenor", "<="],
@@ -59,33 +90,16 @@ if __name__ == "__main__":
         "CarBrandGroup"
     ]
 
-    output_cols = ["Return.txt"]
-    # Assuming windows machine
-    get_filepath_from_colname = lambda colname : f'.\\data\\{colname}.txt'
+    OUTPUT_COLS = ["Return"]
 
+     # Assuming windows machine
+    get_filepath_from_colname = lambda colname : f'.\\{FOLDER_NAME}\\{colname}.txt'
 
-    # Create files if not exist
-    for elem in input_cols.extend(output_cols):
-        colname = elem[0] if isinstance(elem, list)  else elem
-
-        filepath = get_filepath_from_colname(colname)
-        if not os.path.exists(filepath):
-            open(filepath, 'w').close()
-            input(f"{colname}.txt: Please fill in the file")
-
+    create_files(FOLDER_NAME, INPUT_COLS, OUTPUT_COLS)
 
     # Inputs
-    for elem in input_cols:
-        if isinstance(elem, list):
-            colname, operator = elem
-        else:
-            colname = elem
-            operator = "=="
-
-        filepath = get_filepath_from_colname(colname)
-        interactive_output(filepath, colname, ColType.STRING, operator)
+    process_inputs(INPUT_COLS)
 
     # Outputs
-    for colname in output_cols:
-        filepath = get_filepath_from_colname(colname)
-        interactive_output(filepath, "", ColType.NUMBER, "")
+    process_outputs(OUTPUT_COLS)
+    
