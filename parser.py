@@ -33,12 +33,10 @@ def interactive_output(filename, colname, coltype, operator):
     for elem in output_arr:
         input(elem)
 
+
 #  Execution
 #  =============================================
 def create_files(foldername, inputcols, outputcols):
-     # Create files if they don't exist
-    os.makedirs('.\\{foldername}', exist_ok=True)
-
     for elem in [*inputcols, *outputcols]:
         colname = elem[0] if isinstance(elem, list)  else elem
 
@@ -72,7 +70,7 @@ if __name__ == "__main__":
         NUMBER = 2
         BOOLEAN = 3
 
-    FOLDER_NAME = 'data1'
+    FOLDER_NAME = 'data'
     INPUT_COLS = [
         "SubType", 
         "BrandGroup", 
@@ -92,7 +90,8 @@ if __name__ == "__main__":
 
     OUTPUT_COLS = ["Return"]
 
-     # Assuming windows machine
+     # Create folder if not exist,  Assuming windows machine
+    os.makedirs(f'.\\{FOLDER_NAME}', exist_ok=True)
     get_filepath_from_colname = lambda colname : f'.\\{FOLDER_NAME}\\{colname}.txt'
 
     create_files(FOLDER_NAME, INPUT_COLS, OUTPUT_COLS)
