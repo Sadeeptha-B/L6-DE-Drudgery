@@ -41,7 +41,7 @@ def interactive_output(filename, colname, coltype, operator):
 
 #  Execution
 #  =============================================
-def create_files(foldername, inputcols, outputcols):
+def create_files(inputcols, outputcols):
     for elem in [*inputcols, *outputcols]:
         colname = elem[0] if isinstance(elem, list)  else elem
 
@@ -54,13 +54,15 @@ def create_files(foldername, inputcols, outputcols):
 def process_inputs(inputcols):
      for elem in inputcols:
         if isinstance(elem, list):
-            colname, operator = elem
+            colname, coltype, operator, *_ = elem + [None]*3
+            operator = operator or "=="
         else:
             colname = elem
+            coltype = ColType.STRING
             operator = "=="
 
         filepath = get_filepath_from_colname(colname)
-        interactive_output(filepath, colname, ColType.STRING, operator)
+        interactive_output(filepath, colname, coltype, operator)
 
 
 def process_outputs(outputcols):
@@ -79,17 +81,17 @@ if __name__ == "__main__":
     INPUT_COLS = [
         "SubType", 
         "BrandGroup", 
-        ["LoanTenor", "<="],
-        "IsHasNCB",
+        ["LoanTenor", ColType.NUMBER, "<="],  
+        ["IsHasNCB", ColType.BOOLEAN],
         "NCBGrade",
-        ["BalloonPaymentAmount", ">"],
-        "IsTruck",
+        ["BalloonPaymentAmount", ColType.NUMBER, ">"],
+        ["IsTruck", ColType.BOOLEAN],
         "TestProgramCode",
         "CarBrand",
         "CarModel",
         "MCSPAGrade",
         "DealerGroup", 
-        "TestPolicyTighten",
+        ["TestPolicyTighten", ColType.BOOLEAN],
         "CarBrandGroup"
     ]
 
@@ -99,7 +101,7 @@ if __name__ == "__main__":
     os.makedirs(f'.\\{FOLDER_NAME}', exist_ok=True)
     get_filepath_from_colname = lambda colname : f'.\\{FOLDER_NAME}\\{colname}.txt'
 
-    create_files(FOLDER_NAME, INPUT_COLS, OUTPUT_COLS)
+    create_files(INPUT_COLS, OUTPUT_COLS)
 
     # Inputs
     process_inputs(INPUT_COLS)
