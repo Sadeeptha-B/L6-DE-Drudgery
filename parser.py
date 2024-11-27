@@ -9,6 +9,10 @@ def prep_rows(filename, colname, coltype, operator):
         for line in file:
             line = line.rstrip("\n")
             if line == "":
+                if len(tmp_list) == 0:
+                    tmp_list.append('ANY')
+                    continue
+                
                 out.append(format_str(colname, coltype, tmp_list, operator))
                 tmp_list = []
             else: 
@@ -50,7 +54,7 @@ def create_files(inputcols, outputcols):
             open(filepath, 'w').close()
             input(f"{colname}.txt: Please fill in the file ")
 
-            
+
 def process_inputs(inputcols):
      for elem in inputcols:
         if isinstance(elem, list):
@@ -97,11 +101,14 @@ if __name__ == "__main__":
 
     OUTPUT_COLS = ["Return"]
 
-     # Create folder if not exist,  Assuming windows machine
+     # Create folder if not exists
     os.makedirs(FOLDER_NAME, exist_ok=True)
-    get_filepath_from_colname = lambda colname : os.path.join(os.getcwd(), FOLDER_NAME, f'{colname}.txt')
+    folder_path = os.path.join(os.getcwd(), FOLDER_NAME)
+    get_filepath_from_colname = lambda colname : os.path.join(folder_path, f'{colname}.txt')
 
     create_files(INPUT_COLS, OUTPUT_COLS)
+
+    # preprocess_files(folder_path)
 
     # Inputs
     process_inputs(INPUT_COLS)
