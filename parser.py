@@ -98,8 +98,8 @@ if __name__ == "__main__":
     OUTPUT_COLS = ["Return"]
 
      # Create folder if not exist,  Assuming windows machine
-    os.makedirs(f'.\\{FOLDER_NAME}', exist_ok=True)
-    get_filepath_from_colname = lambda colname : f'.\\{FOLDER_NAME}\\{colname}.txt'
+    os.makedirs(FOLDER_NAME, exist_ok=True)
+    get_filepath_from_colname = lambda colname : os.path.join(os.getcwd(), FOLDER_NAME, f'{colname}.txt')
 
     create_files(INPUT_COLS, OUTPUT_COLS)
 
