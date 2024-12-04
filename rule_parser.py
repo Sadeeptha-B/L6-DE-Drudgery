@@ -1,8 +1,15 @@
 from enum import Enum
 import os
+from rule_testcase_generator import generate_test_case
+from excel_writer import write_to_file
 
+
+'''
+Reads relevant file for the specified column and returns
+string formatted and non-formatted outputs
+'''
 def prep_rows(filename, colname, coltype, operator):
-    out = []
+    formatted_rows, data_rows = [], []
 
     with open(filename) as file:
         tmp_list = []
@@ -13,12 +20,15 @@ def prep_rows(filename, colname, coltype, operator):
                     tmp_list.append('ANY')
                     continue
                 
-                out.append(format_str(colname, coltype, tmp_list, operator))
+                # Aggregate data
+                data_rows.append(tmp_list)
+                formatted_rows.append(format_str(colname, coltype, tmp_list, operator))
+                
                 tmp_list = []
             else: 
                 tmp_list.append(line)
 
-    return out
+    return formatted_rows, data_rows
 
 
 def format_str(colname, coltype, elems, operator):
@@ -36,12 +46,16 @@ def format_str(colname, coltype, elems, operator):
     return ' or '.join(out)
    
 
+'''
+For a given column, interactively outputs the data for the column row by row. At the end of iteration returns the
+aggregated data arrays for the output
+'''
 def interactive_output(filename, colname, coltype, operator):
     print(f"{colname}\n=========")
-    output_arr = prep_rows(filename, colname, coltype, operator)
-    for index, elem in enumerate(output_arr, 1):
+    formatted_arr, data_arr = prep_rows(filename, colname, coltype, operator)
+    for index, elem in enumerate(formatted_arr, 1):
         input(f'{index}. {elem}')
-    return output_arr
+    return data_arr
 
 
 #  Execution
@@ -56,23 +70,38 @@ def create_files(inputcols, outputcols):
             input(f"{colname}.txt: Please fill in the file ")
 
 
-def process_data(cols, isOutputCols=False):
-     for elem in cols:
+def process_data(cols, isOutputCols=False, generate_testcases=True):
+    agg_tests = []
+    # Do not generate tests for output cols
+    generate_testcases = generate_testcases and not isOutputCols 
+
+    for elem in cols:
         if isinstance(elem, list):
             colname, coltype, operator, *_ = elem + [None]*3
             operator = operator or "=="
         else:
-            colname = elem
-            coltype = ColType.STRING
-            operator = "=="
+            colname, coltype, operator = elem, ColType.STRING, "=="
 
         filepath = get_filepath_from_colname(colname)
+        displayColname, displayOperator = colname, operator
 
+        # Output cols should not display colname and operator
         if isOutputCols:
-            output_arr = interactive_output(filepath, "", coltype, "")
-        else:
-            output_arr = interactive_output(filepath, colname, coltype, operator)
+            displayColname, displayOperator = "", ""
+       
+        data_arr = interactive_output(filepath, displayColname, coltype, displayOperator)
+        
+        if generate_testcases:
+            # Generate test cases for column
+            tests = generate_test_case(colname, coltype, data_arr, operator)
+            agg_tests.append(tests)
+            
 
+    # Aggregate test cases and write to excel file
+    # Prompt for excel file name
+    if generate_testcases:
+        write_to_file('', cols, agg_tests)
+    
 
 
 if __name__ == "__main__":
@@ -114,5 +143,5 @@ if __name__ == "__main__":
     process_data(INPUT_COLS)
 
     # Outputs
-    process_data(OUTPUT_COLS, isOutputCols=True)
+    process_data(OUTPUT_COLS, isOutputCols=True, generate_testcases=False)
     
