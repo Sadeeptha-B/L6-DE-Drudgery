@@ -26,7 +26,7 @@ def format_str(colname, coltype, elems, operator):
     if len(elems) == 1 and elems[0] in ('ANY', '"ANY"', "'ANY'"):
         return elems[0]
 
-    # Preprocessing - Check if string contains "" / ''
+    # Preprocessing - Check if string contains "" or ''
     if coltype == ColType.STRING:
         str_contains_quotes = lambda s : len(s) != 0 and s[0] in ("'", '"') and s[len(s)-1] in ("'", '"')
         
@@ -41,6 +41,7 @@ def interactive_output(filename, colname, coltype, operator):
     output_arr = prep_rows(filename, colname, coltype, operator)
     for index, elem in enumerate(output_arr, 1):
         input(f'{index}. {elem}')
+    return output_arr
 
 
 #  Execution
@@ -55,8 +56,8 @@ def create_files(inputcols, outputcols):
             input(f"{colname}.txt: Please fill in the file ")
 
 
-def process_inputs(inputcols):
-     for elem in inputcols:
+def process_data(cols, isOutputCols=False):
+     for elem in cols:
         if isinstance(elem, list):
             colname, coltype, operator, *_ = elem + [None]*3
             operator = operator or "=="
@@ -66,13 +67,12 @@ def process_inputs(inputcols):
             operator = "=="
 
         filepath = get_filepath_from_colname(colname)
-        interactive_output(filepath, colname, coltype, operator)
 
+        if isOutputCols:
+            output_arr = interactive_output(filepath, "", coltype, "")
+        else:
+            output_arr = interactive_output(filepath, colname, coltype, operator)
 
-def process_outputs(outputcols):
-    for colname in outputcols:
-        filepath = get_filepath_from_colname(colname)
-        interactive_output(filepath, "", ColType.NUMBER, "")
 
 
 if __name__ == "__main__":
@@ -99,7 +99,9 @@ if __name__ == "__main__":
         "CarBrandGroup"
     ]
 
-    OUTPUT_COLS = ["Return"]
+    OUTPUT_COLS = [
+        ["Return", ColType.NUMBER]
+    ]
 
      # Create folder if not exists
     os.makedirs(FOLDER_NAME, exist_ok=True)
@@ -108,11 +110,9 @@ if __name__ == "__main__":
 
     create_files(INPUT_COLS, OUTPUT_COLS)
 
-    # preprocess_files(folder_path)
-
     # Inputs
-    process_inputs(INPUT_COLS)
+    process_data(INPUT_COLS)
 
     # Outputs
-    process_outputs(OUTPUT_COLS)
+    process_data(OUTPUT_COLS, isOutputCols=True)
     
