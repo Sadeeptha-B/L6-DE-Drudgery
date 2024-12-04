@@ -1,6 +1,8 @@
 import requests
 from datetime import date
-import xlsxwriter
+from excel_writer import write_preprocess_testcases 
+import os
+import json
 
 def get_data(i):
     json_data = {
@@ -736,34 +738,30 @@ def get_data(i):
 }
     return json_data
 
-def generate_output(input_schema, response_json):
+def generate_output(index, input_json, response_json):
     request_id, workflow_output = response_json["RequestId"], response_json["WorkflowOutput"]
     url = f'https://console.nleadsdev.se.scb.co.th/#/report/modern/process/{request_id}?workspace=default'
+    output_obj = {
+        "return": workflow_output["return"],
+        "outcomeMessage": workflow_output["outcomeMessage"],
+        "matchRowNumber": workflow_output["matchRowNumber"]
+    }
+
+    return [index, input_json, json.dumps(output_obj), url]
+
+# Execution 
+# ==========================================================================================
 
 
 
 if __name__ == "__main__": 
-    PROCESS_WF_NAME = 'UW_AccessoriesAmtAUTO_Preprocess'
+    # CONSTANTS
+    PROCESS_WF_NAME = 'UW_GuarantorKYC3AUTO_Preprocess'
     WF_VERSION=0
     WF_REVISION=15
-
-    # Make sure to replace the auth token once your session expires
-    AUTH_TOKEN='Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ5NTEwRjQxRjkwNTJFRTNBRjhFQUQyRjk0RkZERDM1Q0UyRjYzRkUiLCJ0eXAiOiJhdCtqd3QiLCJ4NXQiOiJTVkVQUWZrRkx1T3ZqcTB2bFBfZE5jNHZZXzQifQ.eyJuYmYiOjE3MzMzMDcyNjYsImV4cCI6MTczMzMwODQ2NiwiaXNzIjoiaHR0cHM6Ly9hdXRoLm5sZWFkc2Rldi5zZS5zY2IuY28udGgiLCJhdWQiOlsiY29uZmlndXJhdGlvbkFwaSIsIm1vZGVscyIsImF1ZGl0IiwiZGF0YXByb3ZpZGVycyJdLCJjbGllbnRfaWQiOiJjb25zb2xlIiwic3ViIjoiMzg1IiwiYXV0aF90aW1lIjoxNzMzMzA3MjY1LCJpZHAiOiJvaWRjIiwicm9sZSI6WyJEZWNpc2lvbkVuZ2luZVdvcmtmbG93U2lnbmVyIiwiRGVjaXNpb25FbmdpbmVXb3JrZmxvd0VkaXRvciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZUF1ZGl0Vmlld2VyIiwiRGVjaXNpb25FbmdpbmVSZXBvcnRWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVByb3RlY3RlZERhdGFWaWV3ZXIiLCJCRFdBZG1pbmlzdHJhdG9yIiwiQkRXQ29uZmlndXJhdGlvblZpZXdlciIsIkJEV0RhdGFWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVJlY292ZXJ5TWFuYWdlciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dFeGVjdXRvciIsIkFEV0FkbWluaXN0cmF0b3IiLCJCT1VzZXIiLCJTQ0JfQVVUTyIsIlNDQl9DUk9TU1BST0RVQ1QiLCJTQ0JfTU9SVEdBR0UiLCJTQ0JfVU5TRUNVUkVEIiwiQWRtaW5pc3RyYXRvciJdLCJuYW1lIjoic2FkZWVwdGhhLmJhbmRhcmFAem9yYWxsYWJzLmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InNhZGVlcHRoYS5iYW5kYXJhQHpvcmFsbGFicy5jb20iLCJBc3BOZXQuSWRlbnRpdHkuU2VjdXJpdHlTdGFtcCI6IkVQSVJGUlI1Qzc1UU9JSVRFSVQ3TlVMMjIzREs3WVNPIiwiZ3JhZmFuYV9yb2xlIjoiYWRtaW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzYWRlZXB0aGEuYmFuZGFyYUB6b3JhbGxhYnMuY29tIiwiZW1haWwiOiJzYWRlZXB0aGEuYmFuZGFyYUB6b3JhbGxhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOiJmYWxzZSIsImh0dHBzOi8vYWR3LnpvcmFsbGFicy5jb20vand0L2NsYWltcyI6IntcIngtYWR3LWFsbG93ZWQtZmVhdHVyZXNcIjpcIntcXFwiQXV0b1xcXCIsXFxcIkNyb3NzUHJvZHVjdFxcXCIsXFxcIk1vcnRnYWdlXFxcIixcXFwiVW5zZWN1cmVkXFxcIn1cIixcIngtYWR3LWFsbG93ZWQtcm9sZXNcIjpbXCJhZG1pblwiXSxcIngtYWR3LWRlZmF1bHQtcm9sZVwiOlwiYWRtaW5cIixcIngtYWR3LXVzZXItaWRcIjpcInNhZGVlcHRoYS5iYW5kYXJhQHpvcmFsbGFicy5jb21cIn0iLCJzY29wZSI6WyJvcGVuaWQiLCJwcm9maWxlIiwiZW1haWwiLCJ1c2VyZGF0YSIsImNvbmZpZ3VyYXRpb25BcGkiLCJtb2RlbHMiLCJhdWRpdCIsImRhdGFwcm92aWRlcnMiXSwiYW1yIjpbImV4dGVybmFsIl19.aglttiB9VKJcIKeIo7BwCvGulbMcot45gjS2PyI9X_RM7AVJ0jnyxlgn8pxttsGif4FeeGNbKZq5DSzHtoGVQyKfAoN-P0QVGCm-u8gSZlsaLjnsKYBmOOPz7PC4zapGNoqXWQKhlEhfbN0HdAxMOhS5hntsgpag7Z1y8-zVXJtvcRybR-JfRhhjoJJP-Jde7h3xHSSVMaiN0cMB8buB16BO_uFsEukBNfM8FS7HCN_WwfQlYsvqLUvC4_zO5dgjsD1R1XuQPEP-6AZ0YA5-DWfDBHqjyp6mHptrIvob9HrKzrQ8-uPvFjNvnzwmkJ2_oRK5bmMQS5YkxqvBvfPQCA'
-    
     EMAIL='sadeeptha.bandara@zorallabs.com'
     EXTERNAL_ID=f"{EMAIL}-{date.today()}"
-
-    inputs = [
-        {
-            "kycLevel":"",
-            "kycReason":"",
-            "occupation":"",
-            "kycLevelRM":"",
-            "kycReasonRM":""
-        }
-    ]
-
-    headers = {
+    HTTP_HEADERS = {
         'accept': 'application/json, text/plain, */*',
         'accept-language': 'en-US,en;q=0.9',
         'authorization': AUTH_TOKEN,
@@ -783,21 +781,42 @@ if __name__ == "__main__":
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
         'zworkspace': 'default',
     }
-
-
-    workbook = xlsxwriter.Workbook('filepath')
-    worksheet = workbook.add_worksheet()
+    WORKSHEET_HEADER_COLS = [
+        'Test Case No', 
+        'Input', 
+        'Output', 
+        f'Report Link for {PROCESS_WF_NAME} [DEV ENV]'
+    ]
+    FOLDERNAME = 'data'
     
+    # EPHYMERAL CONSTANTS
+    AUTH_TOKEN='Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ5NTEwRjQxRjkwNTJFRTNBRjhFQUQyRjk0RkZERDM1Q0UyRjYzRkUiLCJ0eXAiOiJhdCtqd3QiLCJ4NXQiOiJTVkVQUWZrRkx1T3ZqcTB2bFBfZE5jNHZZXzQifQ.eyJuYmYiOjE3MzMzMTA4MDEsImV4cCI6MTczMzMxMjAwMSwiaXNzIjoiaHR0cHM6Ly9hdXRoLm5sZWFkc2Rldi5zZS5zY2IuY28udGgiLCJhdWQiOlsiY29uZmlndXJhdGlvbkFwaSIsIm1vZGVscyIsImF1ZGl0IiwiZGF0YXByb3ZpZGVycyJdLCJjbGllbnRfaWQiOiJjb25zb2xlIiwic3ViIjoiMzg1IiwiYXV0aF90aW1lIjoxNzMzMzA3MjY1LCJpZHAiOiJvaWRjIiwicm9sZSI6WyJEZWNpc2lvbkVuZ2luZVdvcmtmbG93U2lnbmVyIiwiRGVjaXNpb25FbmdpbmVXb3JrZmxvd0VkaXRvciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZUF1ZGl0Vmlld2VyIiwiRGVjaXNpb25FbmdpbmVSZXBvcnRWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVByb3RlY3RlZERhdGFWaWV3ZXIiLCJCRFdBZG1pbmlzdHJhdG9yIiwiQkRXQ29uZmlndXJhdGlvblZpZXdlciIsIkJEV0RhdGFWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVJlY292ZXJ5TWFuYWdlciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dFeGVjdXRvciIsIkFEV0FkbWluaXN0cmF0b3IiLCJCT1VzZXIiLCJTQ0JfQVVUTyIsIlNDQl9DUk9TU1BST0RVQ1QiLCJTQ0JfTU9SVEdBR0UiLCJTQ0JfVU5TRUNVUkVEIiwiQWRtaW5pc3RyYXRvciJdLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJzYWRlZXB0aGEuYmFuZGFyYUB6b3JhbGxhYnMuY29tIiwiQXNwTmV0LklkZW50aXR5LlNlY3VyaXR5U3RhbXAiOiJFUElSRlJSNUM3NVFPSUlURUlUN05VTDIyM0RLN1lTTyIsImdyYWZhbmFfcm9sZSI6ImFkbWluIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2FkZWVwdGhhLmJhbmRhcmFAem9yYWxsYWJzLmNvbSIsIm5hbWUiOiJzYWRlZXB0aGEuYmFuZGFyYUB6b3JhbGxhYnMuY29tIiwiZW1haWwiOiJzYWRlZXB0aGEuYmFuZGFyYUB6b3JhbGxhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOiJmYWxzZSIsImh0dHBzOi8vYWR3LnpvcmFsbGFicy5jb20vand0L2NsYWltcyI6IntcIngtYWR3LWFsbG93ZWQtZmVhdHVyZXNcIjpcIntcXFwiQXV0b1xcXCIsXFxcIkNyb3NzUHJvZHVjdFxcXCIsXFxcIk1vcnRnYWdlXFxcIixcXFwiVW5zZWN1cmVkXFxcIn1cIixcIngtYWR3LWFsbG93ZWQtcm9sZXNcIjpbXCJhZG1pblwiXSxcIngtYWR3LWRlZmF1bHQtcm9sZVwiOlwiYWRtaW5cIixcIngtYWR3LXVzZXItaWRcIjpcInNhZGVlcHRoYS5iYW5kYXJhQHpvcmFsbGFicy5jb21cIn0iLCJzY29wZSI6WyJvcGVuaWQiLCJwcm9maWxlIiwiZW1haWwiLCJ1c2VyZGF0YSIsImNvbmZpZ3VyYXRpb25BcGkiLCJtb2RlbHMiLCJhdWRpdCIsImRhdGFwcm92aWRlcnMiXSwiYW1yIjpbImV4dGVybmFsIl19.ibjY4YBAP6ynf8ZlVD5xBYTHqujOduFi-KBUvtxe9OBVDoQP-AtS_afX4JKfLmj66U1g7i6n0Iy7oFLRjvyT_A9hg8d6X5ar42SfSXPhZASrROyVzJOmFX4ykFiOUOjrvBmTUfMsojOREoC67z_rA6avRCG-NGgruQ4bs3uSvYZyugNt9S7Nr_FkHtmXzo-TsMEQhO-LE1JAzPnlmehgTQpmJco4II1V10WSLyw68vmC-gb-GRRVJbJd7x7X4pJrKB2XSbTv81I8vpCpnrGd01BvBm3BDJDyCW4zJXFvILc9PAZoWQy8if49_hSnGFezgAUfJfJn-3jxvaHDK43C-A'
+    DATA_INPUTS = [
+        {
+            "kycLevel":"",
+            "kycReason":"",
+            "occupation":"",
+            "kycLevelRM":"",
+            "kycReasonRM":""
+        }
+    ]
 
+    output_agg = []
+    for row_no, data_input in enumerate(DATA_INPUTS, 1):
+        input_json = get_data(data_input)
 
-    for input in inputs:
         response = requests.post(
             f'https://ms.nleadsdev.se.scb.co.th/runtime/api/process?workflowType=Process&workflowName={PROCESS_WF_NAME}&workflowVersion={WF_VERSION}&workflowRevision={WF_REVISION}&externalId={EXTERNAL_ID}&externalSystemCode=ms-invoke&settingsProfile=Default&uiRequest=true&scriptingRuntime=',
-            headers=headers,
-            json=get_data(input),
+            headers=HTTP_HEADERS,
+            json=input_json
         )
         
-        generate_output(response.json())
+        out = generate_output(input_json, response.json())
+        output_agg.append(out)
+
+    filepath = os.path.join(os.getcwd(), FOLDERNAME, f'TestCase-{PROCESS_WF_NAME}.xlsx')
+    write_preprocess_testcases(filepath, WORKSHEET_HEADER_COLS, output_agg)
+
 
 
 
