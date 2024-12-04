@@ -1,7 +1,7 @@
 from enum import Enum
 import os
 from rule_testcase_generator import generate_test_case
-from excel_writer import write_to_file
+from excel_writer import write_rule_testcases
 
 
 '''
@@ -47,15 +47,13 @@ def format_str(colname, coltype, elems, operator):
    
 
 '''
-For a given column, interactively outputs the data for the column row by row. At the end of iteration returns the
-aggregated data arrays for the output
+For a given column, outputs the data for the column row by row if interactive
+At the end of iteration returns the aggregated data arrays for the output
 '''
-def interactive_output(filename, colname, coltype, operator):
+def interactive_output(colname, formatted_arr):
     print(f"{colname}\n=========")
-    formatted_arr, data_arr = prep_rows(filename, colname, coltype, operator)
     for index, elem in enumerate(formatted_arr, 1):
         input(f'{index}. {elem}')
-    return data_arr
 
 
 #  Execution
@@ -70,7 +68,11 @@ def create_files(inputcols, outputcols):
             input(f"{colname}.txt: Please fill in the file ")
 
 
-def process_data(cols, isOutputCols=False, generate_testcases=True):
+def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=True):
+    if not show_data and not generate_testcases:
+        print(f"{'Output' if isOutputCols else 'Input'} Cols:  One or both of show_data or generate_testcases parameters should be True")
+        return
+
     agg_tests = []
     # Do not generate tests for output cols
     generate_testcases = generate_testcases and not isOutputCols 
@@ -89,8 +91,11 @@ def process_data(cols, isOutputCols=False, generate_testcases=True):
         if isOutputCols:
             displayColname, displayOperator = "", ""
        
-        data_arr = interactive_output(filepath, displayColname, coltype, displayOperator)
+        formatted_arr, data_arr = prep_rows(filepath, displayColname, coltype, displayOperator)
         
+        if show_data:
+            interactive_output(displayColname, formatted_arr)
+
         if generate_testcases:
             # Generate test cases for column
             tests = generate_test_case(colname, coltype, data_arr, operator)
@@ -100,7 +105,7 @@ def process_data(cols, isOutputCols=False, generate_testcases=True):
     # Aggregate test cases and write to excel file
     # Prompt for excel file name
     if generate_testcases:
-        write_to_file('', cols, agg_tests)
+        write_rule_testcases('', cols, agg_tests)
     
 
 
@@ -140,8 +145,8 @@ if __name__ == "__main__":
     create_files(INPUT_COLS, OUTPUT_COLS)
 
     # Inputs
-    process_data(INPUT_COLS)
+    process_data(INPUT_COLS, show_data=True)
 
     # Outputs
-    process_data(OUTPUT_COLS, isOutputCols=True, generate_testcases=False)
+    process_data(OUTPUT_COLS, show_data=False, isOutputCols=True, generate_testcases=False)
     
