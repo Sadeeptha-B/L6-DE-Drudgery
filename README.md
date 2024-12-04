@@ -1,7 +1,8 @@
 ## L6 - DE Drudgery
 
+### For going through rule workflow data column by column 
 1. Fill in INPUT_COLS, OUTPUT_COLS, FOLDER_PATH
-2. Run ```python3 parser.py```
+2. Run ```python3 rule_parser.py```
 3. Script will go through each column and create a file with the column name under specified folder. It will prompt you to fill the file. If folder and  file already exist, this step will be skipped. Continue from Step 6
 4. Copy the column from Jira and paste it in to the file
 5. Do same for all columns
