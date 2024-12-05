@@ -1,6 +1,6 @@
 from enum import Enum
 import os
-from rule_testcase_generator import generate_test_case
+from rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
 from excel_writer import write_rule_testcases
 
 
@@ -79,8 +79,9 @@ def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=Tr
 
     for elem in cols:
         if isinstance(elem, list):
-            colname, coltype, operator, *_ = elem + [None]*3
+            colname, coltype, operator, min_max, *_ = elem + [None]*3
             operator = operator or "=="
+            min_max = min_max or DEFAULT_NUM_COL_RANGE
         else:
             colname, coltype, operator = elem, ColType.STRING, "=="
 
@@ -98,7 +99,10 @@ def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=Tr
 
         if generate_testcases:
             # Generate test cases for column
-            tests = generate_test_case(colname, coltype, data_arr, operator)
+            if coltype != ColType.NUMBER:
+                tests = generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True)
+            else:
+                tests = generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=True)
             agg_tests.append(tests)
             
 
@@ -116,13 +120,14 @@ if __name__ == "__main__":
         BOOLEAN = 3
 
     FOLDER_NAME = 'data'
+    DEFAULT_NUM_COL_RANGE = [0,100]
     INPUT_COLS = [
         "SubType", 
         "BrandGroup", 
-        ["LoanTenor", ColType.NUMBER, "<="],  
+        ["LoanTenor", ColType.NUMBER, "<=", [50, 100]],  
         ["IsHasNCB", ColType.BOOLEAN],
         "NCBGrade",
-        ["BalloonPaymentAmount", ColType.NUMBER, ">"],
+        ["BalloonPaymentAmount", ColType.NUMBER, ">", [-5,10]],
         ["IsTruck", ColType.BOOLEAN],
         "TestProgramCode",
         "CarBrand",
@@ -145,7 +150,7 @@ if __name__ == "__main__":
     create_files(INPUT_COLS, OUTPUT_COLS)
 
     # Inputs
-    process_data(INPUT_COLS, show_data=True)
+    process_data(INPUT_COLS, show_data=False)
 
     # Outputs
     process_data(OUTPUT_COLS, show_data=False, isOutputCols=True, generate_testcases=False)
