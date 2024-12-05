@@ -2,6 +2,7 @@
 Generating testcases for Rules
 '''
 import random
+import utils
 
 print_chosen = lambda index, options, choice : print(f'{index}. Options: {options}, Chosen: {choice}')
 
@@ -51,11 +52,10 @@ def generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=T
                 print_chosen(ind, data_options, choice)
             continue
             
-        
         option = data_options[0]
         
         # Handle ANY
-        if option in ('ANY', '"ANY"', "'ANY'"):
+        if utils.find_any(option):
             choice = random.randint(MIN_VALUE, MAX_VALUE)
             tests.append(choice)
             if verbose: 

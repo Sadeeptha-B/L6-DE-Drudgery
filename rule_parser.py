@@ -2,6 +2,7 @@ from enum import Enum
 import os
 from rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
 from excel_writer import write_rule_testcases
+import utils
 
 
 '''
@@ -33,7 +34,7 @@ def prep_rows(filename, colname, coltype, operator):
 
 def format_str(colname, coltype, elems, operator):
     # Handle ANY
-    if len(elems) == 1 and elems[0] in ('ANY', '"ANY"', "'ANY'"):
+    if len(elems) == 1 and utils.find_any(elems[0]):
         return elems[0]
 
     # Preprocessing - Check if string contains "" or ''
@@ -56,20 +57,31 @@ def interactive_output(colname, formatted_arr):
         input(f'{index}. {elem}')
 
 
-def extract_col_data(elem):
+def extract_col_data(col_data):
     min_max = None
 
-    if isinstance(elem, list):
-        colname, coltype, operator, min_max, *_ = elem + [None]*3
+    if isinstance(col_data, list):
+        colname, coltype, operator, min_max, *_ = col_data + [None]*3
         operator = operator or "=="
         min_max = min_max or DEFAULT_NUM_COL_RANGE # Only considered for numerical types
     else:
-        colname, coltype, operator = elem, ColType.STRING, "=="
+        colname, coltype, operator = col_data, ColType.STRING, "=="
 
     return colname, coltype, operator, min_max
 
+
+# Lots of room for improving this using numpy and pandas dataframes
 def postprocess_testcases(cols, agg_tests):
-    pass
+    rows = []
+
+    for row_data in zip(*agg_tests):
+        row_dict = {}
+        for ind, elem in enumerate(row_data):
+            colname, _, _, _ = extract_col_data(cols[ind])
+            row_dict[colname] = elem
+        rows.append(row_dict)
+
+    return rows  
 
 
 #  Execution
@@ -122,8 +134,9 @@ def generate_test_cases(cols, agg_data_arr, verbose_tests=False, write_to_file=T
     # Prompt for excel file name    
     if write_to_file:
         write_rule_testcases('', cols, agg_tests)
-
-    return agg_tests
+    
+    tests_dict = postprocess_testcases(cols, agg_tests)
+    return tests_dict 
 
 
 if __name__ == "__main__":
@@ -186,9 +199,8 @@ if __name__ == "__main__":
     '''
     # Inputs
     agg_data_arr = process_data(INPUT_COLS, show_data=False)
-    agg_tests = generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, write_to_file=True)
-    print(agg_tests)
-
+    tests = generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, write_to_file=True)
+    print(tests)
+    
     # Outputs
     process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
-    
