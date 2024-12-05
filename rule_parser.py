@@ -56,6 +56,22 @@ def interactive_output(colname, formatted_arr):
         input(f'{index}. {elem}')
 
 
+def extract_col_data(elem):
+    min_max = None
+
+    if isinstance(elem, list):
+        colname, coltype, operator, min_max, *_ = elem + [None]*3
+        operator = operator or "=="
+        min_max = min_max or DEFAULT_NUM_COL_RANGE # Only considered for numerical types
+    else:
+        colname, coltype, operator = elem, ColType.STRING, "=="
+
+    return colname, coltype, operator, min_max
+
+def postprocess_testcases(cols, agg_tests):
+    pass
+
+
 #  Execution
 #  =============================================
 def create_files(inputcols, outputcols):
@@ -68,49 +84,46 @@ def create_files(inputcols, outputcols):
             input(f"{colname}.txt: Please fill in the file ")
 
 
-def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=True, verbose_tests=False):
-    if not show_data and not generate_testcases:
-        print(f"{'Output' if isOutputCols else 'Input'} Cols:  One or both of show_data or generate_testcases parameters should be True")
-        return
+def process_data(cols, show_data=True, is_output_cols=False):
+    agg_data_arr = []
 
-    agg_tests = []
-    # Do not generate tests for output cols
-    generate_testcases = generate_testcases and not isOutputCols 
-
-    for elem in cols:
-        if isinstance(elem, list):
-            colname, coltype, operator, min_max, *_ = elem + [None]*3
-            operator = operator or "=="
-            min_max = min_max or DEFAULT_NUM_COL_RANGE
-        else:
-            colname, coltype, operator = elem, ColType.STRING, "=="
-
+    for col_data in cols:
+        colname, coltype, operator, min_max = extract_col_data(col_data)
         filepath = get_filepath_from_colname(colname)
         displayColname, displayOperator = colname, operator
 
         # Output cols should not display colname and operator
-        if isOutputCols:
+        if is_output_cols:
             displayColname, displayOperator = "", ""
        
         formatted_arr, data_arr = prep_rows(filepath, displayColname, coltype, displayOperator)
+        agg_data_arr.append(data_arr)
         
         if show_data:
             interactive_output(displayColname, formatted_arr)
 
-        if generate_testcases:
-            # Generate test cases for column
-            if coltype != ColType.NUMBER:
-                tests = generate_non_numerical_testcases(colname, coltype, data_arr, verbose=verbose_tests)
-            else:
-                tests = generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=verbose_tests)
-            agg_tests.append(tests)
-            
+    return agg_data_arr
+
+
+def generate_test_cases(cols, agg_data_arr, verbose_tests=False, write_to_file=True):
+    agg_tests = []
+
+    for col_data, data_arr in zip(cols, agg_data_arr):
+        colname, coltype, operator, min_max = extract_col_data(col_data)
+
+         # Generate test cases for column
+        if coltype != ColType.NUMBER:
+            tests = generate_non_numerical_testcases(colname, coltype, data_arr, verbose=verbose_tests)
+        else:
+            tests = generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=verbose_tests)
+        agg_tests.append(tests)
 
     # Aggregate test cases and write to excel file
-    # Prompt for excel file name
-    if generate_testcases:
+    # Prompt for excel file name    
+    if write_to_file:
         write_rule_testcases('', cols, agg_tests)
-    
+
+    return agg_tests
 
 
 if __name__ == "__main__":
@@ -122,7 +135,7 @@ if __name__ == "__main__":
     FOLDER_NAME = 'data'
     DEFAULT_NUM_COL_RANGE = [0,100]
 
-    # Example
+    #Example
     # FOLDER_NAME = 'example'
     # INPUT_COLS = [
     #     "SubType", 
@@ -140,6 +153,9 @@ if __name__ == "__main__":
     #     ["TestPolicyTighten", ColType.BOOLEAN],
     #     "CarBrandGroup"
     # ]
+    # OUTPUT_COLS = [
+    #     ["Return", ColType.NUMBER]
+    # ]
     
     INPUT_COLS = [
         ["KYCLevel", ColType.NUMBER, "==", [2,5]],
@@ -151,7 +167,7 @@ if __name__ == "__main__":
 
 
     OUTPUT_COLS = [
-        ["Return", ColType.NUMBER]
+        ["Return", ColType.BOOLEAN]
     ]
 
      # Create folder if not exists
@@ -161,9 +177,18 @@ if __name__ == "__main__":
 
     create_files(INPUT_COLS, OUTPUT_COLS)
 
+    '''
+    Control panel
+    ==============================================
+    show_data: Whether to show interactive output (Go over row by row by column by pressing enter)
+               You can disable this mode if you only want to generate test cases
+    is_output_cols: Output cols do not need boolean expressions. So output cols is used to identify these.
+    '''
     # Inputs
-    process_data(INPUT_COLS, show_data=False, verbose_tests=True)
+    agg_data_arr = process_data(INPUT_COLS, show_data=False)
+    agg_tests = generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, write_to_file=True)
+    print(agg_tests)
 
     # Outputs
-    process_data(OUTPUT_COLS, show_data=False, isOutputCols=True, generate_testcases=False)
+    process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
     
