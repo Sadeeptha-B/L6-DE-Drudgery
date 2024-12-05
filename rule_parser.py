@@ -68,7 +68,7 @@ def create_files(inputcols, outputcols):
             input(f"{colname}.txt: Please fill in the file ")
 
 
-def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=True):
+def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=True, verbose_tests=False):
     if not show_data and not generate_testcases:
         print(f"{'Output' if isOutputCols else 'Input'} Cols:  One or both of show_data or generate_testcases parameters should be True")
         return
@@ -100,9 +100,9 @@ def process_data(cols, show_data=True, isOutputCols=False, generate_testcases=Tr
         if generate_testcases:
             # Generate test cases for column
             if coltype != ColType.NUMBER:
-                tests = generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True)
+                tests = generate_non_numerical_testcases(colname, coltype, data_arr, verbose=verbose_tests)
             else:
-                tests = generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=True)
+                tests = generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=verbose_tests)
             agg_tests.append(tests)
             
 
@@ -121,22 +121,34 @@ if __name__ == "__main__":
 
     FOLDER_NAME = 'data'
     DEFAULT_NUM_COL_RANGE = [0,100]
+
+    # Example
+    # FOLDER_NAME = 'example'
+    # INPUT_COLS = [
+    #     "SubType", 
+    #     "BrandGroup", 
+    #     ["LoanTenor", ColType.NUMBER, "<=", [50, 100]],  
+    #     ["IsHasNCB", ColType.BOOLEAN],
+    #     "NCBGrade",
+    #     ["BalloonPaymentAmount", ColType.NUMBER, ">", [-1,10]],
+    #     ["IsTruck", ColType.BOOLEAN],
+    #     "TestProgramCode",
+    #     "CarBrand",
+    #     "CarModel",
+    #     "MCSPAGrade",
+    #     "DealerGroup", 
+    #     ["TestPolicyTighten", ColType.BOOLEAN],
+    #     "CarBrandGroup"
+    # ]
+    
     INPUT_COLS = [
-        "SubType", 
-        "BrandGroup", 
-        ["LoanTenor", ColType.NUMBER, "<=", [50, 100]],  
-        ["IsHasNCB", ColType.BOOLEAN],
-        "NCBGrade",
-        ["BalloonPaymentAmount", ColType.NUMBER, ">", [-5,10]],
-        ["IsTruck", ColType.BOOLEAN],
-        "TestProgramCode",
-        "CarBrand",
-        "CarModel",
-        "MCSPAGrade",
-        "DealerGroup", 
-        ["TestPolicyTighten", ColType.BOOLEAN],
-        "CarBrandGroup"
+        ["KYCLevel", ColType.NUMBER, "==", [2,5]],
+        ["KYCReason", ColType.NUMBER, "==", [300,325]],
+        ["Occupation", ColType.NUMBER, "==", [40,100]],
+        ["KYCLevelRM", ColType.NUMBER, "==", [2,5]],
+        ["KYCReasonRM", ColType.NUMBER, "==", [300,325]],
     ]
+
 
     OUTPUT_COLS = [
         ["Return", ColType.NUMBER]
@@ -150,7 +162,7 @@ if __name__ == "__main__":
     create_files(INPUT_COLS, OUTPUT_COLS)
 
     # Inputs
-    process_data(INPUT_COLS, show_data=False)
+    process_data(INPUT_COLS, show_data=False, verbose_tests=True)
 
     # Outputs
     process_data(OUTPUT_COLS, show_data=False, isOutputCols=True, generate_testcases=False)

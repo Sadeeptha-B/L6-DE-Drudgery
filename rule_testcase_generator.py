@@ -39,8 +39,18 @@ def generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=T
 
     tests = []
     for ind, data_options in enumerate(data_arr, 1):
-        if len(data_options) == 0 or len(data_options) > 1:
-            raise ValueError('Each row should have only one data option')
+        if len(data_options) == 0:
+            raise ValueError('Each row should have at least one data option')
+        
+        # Handle multiple options
+        if len(data_options) > 1:
+            # Must be equality
+            choice = int(random.choice(data_options))
+            tests.append(choice)
+            if verbose:
+                print_chosen(ind, data_options, choice)
+            continue
+            
         
         option = data_options[0]
         
