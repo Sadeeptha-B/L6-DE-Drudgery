@@ -2,7 +2,7 @@
 Generating testcases for Rules
 '''
 import random
-import utils
+import utils.utils as utils
 
 print_chosen = lambda index, options, choice : print(f'{index}. Options: {options}, Chosen: {choice}')
 

@@ -1,8 +1,8 @@
 from enum import Enum
 import os
-from rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
-from excel_writer import write_rule_testcases
-import utils
+from rule_workflows.rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
+from utils.excel_writer import write_rule_testcases
+import utils.utils as utils
 
 
 '''
@@ -203,4 +203,4 @@ if __name__ == "__main__":
     print(tests)
     
     # Outputs
-    process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
+    process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
