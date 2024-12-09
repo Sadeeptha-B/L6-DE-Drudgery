@@ -3,7 +3,15 @@ import os
 from rule_workflows.rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
 from utils.excel_writer import write_rule_testcases
 import utils.utils as utils
-import json
+import pyperclip
+
+# Constants
+class ColType(Enum):
+    STRING = 1
+    NUMBER = 2
+    BOOLEAN = 3
+
+DEFAULT_NUM_COL_RANGE = [0,100]
 
 
 '''
@@ -39,10 +47,8 @@ def format_str(colname, coltype, elems, operator):
         return elems[0]
 
     # Preprocessing - Check if string contains "" or ''
-    if coltype == ColType.STRING:
-        str_contains_quotes = lambda s : len(s) != 0 and s[0] in ("'", '"') and s[len(s)-1] in ("'", '"')
-        
-        elems = [e if str_contains_quotes(e) else f'"{e}"' for e in elems]
+    if coltype == ColType.STRING:       
+        elems = [e if utils.str_contains_quotes(e) else f'"{e}"' for e in elems]
 
     out = [f'{colname} {operator} {e}'.strip() for e in elems]
     return ' or '.join(out)
@@ -50,23 +56,21 @@ def format_str(colname, coltype, elems, operator):
 
 '''
 For a given column, outputs the data for the column row by row if interactive
-At the end of iteration returns the aggregated data arrays for the output
 '''
 def interactive_output(colname, formatted_arr):
     print(f"{colname}\n=========")
     for index, elem in enumerate(formatted_arr, 1):
+        pyperclip.copy(elem)
         input(f'{index}. {elem}')
 
 
 def extract_col_data(col_data):
-    min_max = None
-
     if isinstance(col_data, list):
         colname, coltype, operator, min_max, *_ = col_data + [None]*3
         operator = operator or "=="
-        min_max = min_max or DEFAULT_NUM_COL_RANGE # Only considered for numerical types
+        min_max = min_max or DEFAULT_NUM_COL_RANGE if coltype == ColType.NUMBER else None 
     else:
-        colname, coltype, operator = col_data, ColType.STRING, "=="
+        colname, coltype, operator, min_max = col_data, ColType.STRING, "==", None
 
     return colname, coltype, operator, min_max
 
@@ -101,7 +105,7 @@ def process_data(cols, show_data=True, is_output_cols=False):
     agg_data_arr = []
 
     for col_data in cols:
-        colname, coltype, operator, min_max = extract_col_data(col_data)
+        colname, coltype, operator, _ = extract_col_data(col_data)
         filepath = get_filepath_from_colname(colname)
         displayColname, displayOperator = colname, operator
 
@@ -141,14 +145,6 @@ def generate_test_cases(cols, agg_data_arr, verbose_tests=False, write_to_file=T
 
 
 if __name__ == "__main__":
-    class ColType(Enum):
-        STRING = 1
-        NUMBER = 2
-        BOOLEAN = 3
-
-    FOLDER_NAME = 'data'
-    DEFAULT_NUM_COL_RANGE = [0,100]
-
     #Example
     # FOLDER_NAME = 'example'
     # INPUT_COLS = [
@@ -171,6 +167,7 @@ if __name__ == "__main__":
     #     ["Return", ColType.NUMBER]
     # ]
     
+    FOLDER_NAME = 'data'
     INPUT_COLS = [
         ["KYCLevel", ColType.NUMBER, "==", [2,5]],
         ["KYCReason", ColType.NUMBER, "==", [300,325]],
@@ -178,25 +175,26 @@ if __name__ == "__main__":
         ["KYCLevelRM", ColType.NUMBER, "==", [2,5]],
         ["KYCReasonRM", ColType.NUMBER, "==", [300,325]],
     ]
-
-
     OUTPUT_COLS = [
         ["Return", ColType.BOOLEAN]
     ]
 
      # Create folder if not exists
     os.makedirs(FOLDER_NAME, exist_ok=True)
-    folder_path = os.path.join(os.getcwd(), FOLDER_NAME)
-    get_filepath_from_colname = lambda colname : os.path.join(folder_path, f'{colname}.txt')
-
+    get_filepath_from_colname = lambda colname : utils.get_filepath(FOLDER_NAME, f'{colname}.txt')
     create_files(INPUT_COLS, OUTPUT_COLS)
 
     '''
-    Control panel
-    ==============================================
+    Process Data
+    ------------------------
     show_data: Whether to show interactive output (Go over row by row by column by pressing enter)
                You can disable this mode if you only want to generate test cases
-    is_output_cols: Output cols do not need boolean expressions. So output cols is used to identify these.
+    is_output_cols: Output cols do not need boolean expressions. So, this param is used to identify these.
+    
+    Generate Test cases 
+    -------------------------
+    verbose_tests: Print detailed outputs for tests
+    write_to_file: Whether to generate excel file for tests
     '''
     # Inputs
     agg_data_arr = process_data(INPUT_COLS, show_data=True)

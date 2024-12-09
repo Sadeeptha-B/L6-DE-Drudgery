@@ -8,5 +8,12 @@ def camelcase(st):
 def find_any(input): 
     return input in ('ANY', '"ANY"', "'ANY'")
 
-# def get_filepath_from_colname(colname): 
-#     return os.path.join(folder_path, f'{colname}.txt')
+'''
+For a file nested in a subdirectory in cwd
+'''
+def get_filepath(folderpath, filename): 
+    return os.path.join(os.getcwd(), folderpath, filename)
+
+def str_contains_quotes(s):
+    quotes = ("'", '"')
+    return len(s) != 0 and s[0] in quotes and s[len(s)-1] in quotes
