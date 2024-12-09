@@ -3,6 +3,7 @@ import os
 from rule_workflows.rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
 from utils.excel_writer import write_rule_testcases
 import utils.utils as utils
+import json
 
 
 '''
@@ -198,7 +199,7 @@ if __name__ == "__main__":
     is_output_cols: Output cols do not need boolean expressions. So output cols is used to identify these.
     '''
     # Inputs
-    agg_data_arr = process_data(INPUT_COLS, show_data=False)
+    agg_data_arr = process_data(INPUT_COLS, show_data=True)
     tests = generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, write_to_file=True)
     print(tests)
     
