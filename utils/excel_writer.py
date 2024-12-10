@@ -1,7 +1,18 @@
 import xlsxwriter
+import utils.utils as utils
 
-def write_rule_testcases(filename, inputcols, agg_tests):
+def write_rule_testcases(filepath, header_cols, data_agg):
+    # header_arr = []
+    
+    # for col_data in inputcols:
+    #     colname, _, _, _ = extract_col_data(col_data)
+    #     header_arr.append(f'input.{utils.camelcase(colname)}')
+
+    # header_arr = ["*execute dm_DecisionMatrix"].extend(header_arr)
+    # print(header_arr )
     pass
+
+
 
 
 def create_workbook(filepath, header_cols):

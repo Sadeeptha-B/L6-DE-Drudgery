@@ -1,7 +1,7 @@
 from enum import Enum
 import os
 from rule_workflows.rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
-from utils.excel_writer import write_rule_testcases
+from utils.excel_writer import write_rule_testcases as write_to_file
 import utils.utils as utils
 import pyperclip
 
@@ -122,9 +122,10 @@ def process_data(cols, show_data=True, is_output_cols=False):
     return agg_data_arr
 
 
-def generate_test_cases(cols, agg_data_arr, verbose_tests=False, write_to_file=True):
+def generate_test_cases(cols, agg_data_arr, verbose_tests=False, postprocess=True):
     agg_tests = []
 
+    # Generate and aggregate test cases
     for col_data, data_arr in zip(cols, agg_data_arr):
         colname, coltype, operator, min_max = extract_col_data(col_data)
 
@@ -134,18 +135,37 @@ def generate_test_cases(cols, agg_data_arr, verbose_tests=False, write_to_file=T
         else:
             tests = generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=verbose_tests)
         agg_tests.append(tests)
-
-    # Aggregate test cases and write to excel file
-    # Prompt for excel file name    
-    if write_to_file:
-        write_rule_testcases('', cols, agg_tests)
     
-    tests_dict = postprocess_testcases(cols, agg_tests)
-    return tests_dict 
+    if postprocess:
+        tests_dict = postprocess_testcases(cols, agg_tests)
+        return agg_tests, tests_dict 
+    return agg_tests, None
 
+
+def write_rule_testcases(inputcols, outputcols, agg_tests, output_agg, filepath):
+    # Preparing headers
+    header_cols = ["*execute dm_DecisionMatrix"]
+    inputs_formatted = [f'input.{utils.camelcase(extract_col_data(col_data)[0])}' for col_data in inputcols]
+    outputs_formatted = [f"expected.*dm_DecisionMatrix.{extract_col_data(col_data)[0]}" for col_data in outputcols]
+    header_cols.extend([*inputs_formatted, *outputs_formatted])
+    header_cols.append("expected.*dm_DecisionMatrix.matchedRow")
+
+    # Preparing data
+    # Assumes output_agg data is the data_arr result from process_data directly
+    output_agg = [[outrow[0] for outrow in outcol] for outcol in output_agg]
+    row_count = len(output_agg[0])
+    output_agg.append([i for i in range(1, row_count + 1)])
+    data_agg = [*agg_tests, *output_agg]
+
+    write_to_file(filepath, header_cols, data_agg)
 
 if __name__ == "__main__":
-    #Example
+    # Example
+    # Cols Format - Name, Type, Operator, Min Max range to be used for numerical types
+    # When specifying the min, max range be careful to choose two values that are not
+    # part of the input dataset. 
+    # ======================================================
+    #
     # FOLDER_NAME = 'example'
     # INPUT_COLS = [
     #     "SubType", 
@@ -168,12 +188,13 @@ if __name__ == "__main__":
     # ]
     
     FOLDER_NAME = 'data'
+    WF_NAME = ''
     INPUT_COLS = [
-        ["KYCLevel", ColType.NUMBER, "==", [2,5]],
-        ["KYCReason", ColType.NUMBER, "==", [300,325]],
-        ["Occupation", ColType.NUMBER, "==", [40,100]],
-        ["KYCLevelRM", ColType.NUMBER, "==", [2,5]],
-        ["KYCReasonRM", ColType.NUMBER, "==", [300,325]],
+        "KYCLevel",
+        "KYCReason",
+        "Occupation",
+        "KYCLevelRM",
+        "KYCReasonRM",
     ]
     OUTPUT_COLS = [
         ["Return", ColType.BOOLEAN]
@@ -196,10 +217,13 @@ if __name__ == "__main__":
     verbose_tests: Print detailed outputs for tests
     write_to_file: Whether to generate excel file for tests
     '''
-    # Inputs
-    agg_data_arr = process_data(INPUT_COLS, show_data=True)
-    tests = generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, write_to_file=True)
-    print(tests)
+    # Process inputs and outputs
+    agg_data_arr = process_data(INPUT_COLS, show_data=False)
+    output_agg = process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
     
-    # Outputs
-    process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
+    # Test cases
+    agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)
+
+    # Write tests to file
+    filepath = utils.get_filepath(FOLDER_NAME, f'{WF_NAME}_vo_Testing_Review.xlsx')
+    write_rule_testcases(INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg, filepath)
