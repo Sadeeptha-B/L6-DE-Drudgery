@@ -1,11 +1,27 @@
 ## L6 - DE Drudgery
 
-### For going through rule workflow data column by column 
-1. Fill in INPUT_COLS, OUTPUT_COLS, FOLDER_PATH
-2. Run ```python3 rule_parser.py```
-3. Script will go through each column and create a file with the column name under specified folder. It will prompt you to fill the file. If folder and  file already exist, this step will be skipped. Continue from Step 6
-4. Copy the column from Jira and paste it in to the file
-5. Do same for all columns
-6. Then Script will go over each column and print out each row. Press enter to go through each row for the column. Script expects ANY columns to contain the text ANY and not be empty
-7. Copy paste into DE
+### Processing Rule Workflows
+The file ``rule_parser.py`` allows you to create a file for each specific column in a
+rule which you must fill with the column data. 
+
+Then you can go through each row for each column line by line which you can copy paste into the lookup matrix. (If show_data option is true)
+This option can be disabled if you only want to generate test cases.
+
+Then the script will generate test cases and write them into a file. This is coordinated using ``process_data, generate_test_cases, write_rule_testcases`` functions. View the source code for the configuration options available.  
+
+Limitations:
+- For numerical values, test cases are only generated with ints
+- Test cases for the default case are not generated (coming soon!)
+- Be sure to enter valid data to the data files for the test cases to pass. Makes sure the OutomeMessage file does not contain quotes, since the lookup matrix does not expect quotes when evaluating test cases.
+- Each test case is generated independently. So, some testcases may be caught by a previous condition. Manually
+edit these test cases. 
+
+### Instructions to use
+1. [Create an environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) for the project using a package of your choice (venv or conda)
+2. Install requirements with 
+```pip install -r requirements. txt ```
+3. In `rule_parser.py`, add INPUT_COLS,OUTPUT_COLS, FOLDER_NAME, WF_NAME as per the example format
+4. Configure options in file as necessary
+4. Run ```python rule_parser.py```
+
 

@@ -220,7 +220,7 @@ if __name__ == "__main__":
     postprocess: Will return an output dict which aggregates the results row by with each column being a key
     '''
     # Process inputs and outputs
-    agg_data_arr = process_data(INPUT_COLS, show_data=False)
+    agg_data_arr = process_data(INPUT_COLS, show_data=True)
     output_agg = process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
     
     # Test cases
