@@ -23,6 +23,8 @@ def generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True):
             # All other rows should contain only one option
             choice = data_options[0]
 
+        # Add string quotes
+        choice = f'"{choice}"'
         tests.append(choice)
         if verbose: 
             print_chosen(ind, data_options, choice)

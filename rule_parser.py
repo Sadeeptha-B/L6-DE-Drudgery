@@ -18,7 +18,7 @@ DEFAULT_NUM_COL_RANGE = [0,100]
 Reads relevant file for the specified column and returns
 string formatted and non-formatted outputs
 '''
-def prep_rows(filename, colname, coltype, operator):
+def prep_rows(filename, colname, coltype, operator, is_output_cols=False):
     formatted_rows, data_rows = [], []
 
     with open(filename) as file:
@@ -32,7 +32,7 @@ def prep_rows(filename, colname, coltype, operator):
                 
                 # Aggregate data
                 data_rows.append(tmp_list)
-                formatted_rows.append(format_str(colname, coltype, tmp_list, operator))
+                formatted_rows.append(format_str(colname, coltype, tmp_list, operator, is_output_cols))
                 
                 tmp_list = []
             else: 
@@ -41,13 +41,14 @@ def prep_rows(filename, colname, coltype, operator):
     return formatted_rows, data_rows
 
 
-def format_str(colname, coltype, elems, operator):
+def format_str(colname, coltype, elems, operator, is_output_cols=False):
     # Handle ANY
     if len(elems) == 1 and utils.find_any(elems[0]):
         return elems[0]
 
     # Preprocessing - Check if string contains "" or ''
-    if coltype == ColType.STRING:       
+    # Do not add quotes if output_col
+    if coltype == ColType.STRING and not is_output_cols:       
         elems = [e if utils.str_contains_quotes(e) else f'"{e}"' for e in elems]
 
     out = [f'{colname} {operator} {e}'.strip() for e in elems]
@@ -113,7 +114,7 @@ def process_data(cols, show_data=True, is_output_cols=False):
         if is_output_cols:
             displayColname, displayOperator = "", ""
        
-        formatted_arr, data_arr = prep_rows(filepath, displayColname, coltype, displayOperator)
+        formatted_arr, data_arr = prep_rows(filepath, displayColname, coltype, displayOperator, is_output_cols)
         agg_data_arr.append(data_arr)
         
         if show_data:
@@ -146,7 +147,7 @@ def write_rule_testcases(inputcols, outputcols, agg_tests, output_agg, filepath)
     # Preparing headers
     header_cols = ["*execute dm_DecisionMatrix"]
     inputs_formatted = [f'input.{utils.camelcase(extract_col_data(col_data)[0])}' for col_data in inputcols]
-    outputs_formatted = [f"expected.*dm_DecisionMatrix.{extract_col_data(col_data)[0]}" for col_data in outputcols]
+    outputs_formatted = [f"expected.*dm_DecisionMatrix.output.{extract_col_data(col_data)[0]}" for col_data in outputcols]
     header_cols.extend([*inputs_formatted, *outputs_formatted])
     header_cols.append("expected.*dm_DecisionMatrix.matchedRow")
 
@@ -188,7 +189,7 @@ if __name__ == "__main__":
     # ]
     
     FOLDER_NAME = 'data'
-    WF_NAME = ''
+    WF_NAME = 'UW_GuarantorKYC3_Auto'
     INPUT_COLS = [
         "KYCLevel",
         "KYCReason",
@@ -197,7 +198,8 @@ if __name__ == "__main__":
         "KYCReasonRM",
     ]
     OUTPUT_COLS = [
-        ["Return", ColType.BOOLEAN]
+        ["Return", ColType.BOOLEAN],
+        "OutcomeMessage"
     ]
 
      # Create folder if not exists
@@ -215,15 +217,15 @@ if __name__ == "__main__":
     Generate Test cases 
     -------------------------
     verbose_tests: Print detailed outputs for tests
-    write_to_file: Whether to generate excel file for tests
+    postprocess: Will return an output dict which aggregates the results row by with each column being a key
     '''
     # Process inputs and outputs
     agg_data_arr = process_data(INPUT_COLS, show_data=False)
-    output_agg = process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
+    output_agg = process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
     
     # Test cases
     agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)
 
     # Write tests to file
-    filepath = utils.get_filepath(FOLDER_NAME, f'{WF_NAME}_vo_Testing_Review.xlsx')
-    write_rule_testcases(INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg, filepath)
+    testcase_filepath = utils.get_filepath(FOLDER_NAME, f'{WF_NAME}_vo_Testing_Review.xlsx')
+    write_rule_testcases(INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg, testcase_filepath)
