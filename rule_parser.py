@@ -157,6 +157,7 @@ def write_rule_testcases(wf_name, display_inputcols, outputcols, agg_tests, outp
 
     write_to_file(filepath, header_cols, data_agg)
 
+
 def generate_jira_markdown(wf_name):
     print("\nGenerating Jira Output Markdown\n======================================")
     wf_revision = input('Enter rule workflow revision: ')
@@ -198,16 +199,16 @@ if __name__ == "__main__":
     INPUT_COLS = [
         "SubProduct",
         "ProductProgram",
-        "BorrowerType",
-        ["IsAtLeastOneCondo", ColType.BOOLEAN],
-        ["BaseLTV", ColType.NUMBER, ">", [50, 100]],
-        ["BasedLTV", ColType.NUMBER, "<=", [60, 100]]
+        "ProjectCode",
+        "CreditLineType",
+        "CollateralType",
+        "NCBGrade"
     ]
     OUTPUT_COLS = [
-        ["Return", ColType.BOOLEAN],
-        "OutcomeMessage"
+        ["Return", ColType.NUMBER],
     ]
-    TESTCASE_INPUT_COLS = ['subProduct', 'productProgram', 'borrowerType', 'isAtLeastOneCondo', 'baseLTV', 'basedLTV']
+
+    TESTCASE_INPUT_COLS = ['subProduct', 'productProgram', 'projectCode', 'creditLineType', 'collateralType', 'ncbGrade']
     DEFAULT_NUM_COL_RANGE = [0,100]
 
      # Create folder if not exists
@@ -228,8 +229,8 @@ if __name__ == "__main__":
     postprocess: Will return an output dict which aggregates the results row by with each column being a key
     '''
     # Process inputs and outputs
-    agg_data_arr = process_data(INPUT_COLS, show_data=False)
-    output_agg = process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
+    agg_data_arr = process_data(INPUT_COLS, show_data=True)
+    output_agg = process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
     
     # Test cases
     agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)

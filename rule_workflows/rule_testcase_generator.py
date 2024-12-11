@@ -4,6 +4,7 @@ Generating testcases for Rules
 import random
 import utils.utils as utils
 from utils.types import ColType
+import utils.utils as utils
 
 
 # Column cell can contain either String, Boolean or Any
@@ -18,7 +19,8 @@ def generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True):
         
         # Must be a string
         if len(data_options) > 1:
-            choice = random.choice(data_options)
+            option = random.choice(data_options)
+            choice = option if utils.str_contains_quotes(option) else f'"{option}"'
             tests.append(f'"{choice}"')
             debug_print(ind, data_options, choice, verbose)
             continue
@@ -35,7 +37,7 @@ def generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True):
                 continue
 
         # Must be string
-        choice = f'"{option}"' if coltype != ColType.BOOLEAN else option
+        choice = option if coltype == ColType.BOOLEAN or utils.str_contains_quotes(option) else f'"{option}"'
         tests.append(choice)
         debug_print(ind, data_options, choice, verbose)
 
