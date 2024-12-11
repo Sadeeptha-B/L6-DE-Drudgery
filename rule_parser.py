@@ -1,17 +1,9 @@
-from enum import Enum
 import os
 from rule_workflows.rule_testcase_generator import generate_non_numerical_testcases, generate_numerical_testcases
 from utils.excel_writer import write_rule_testcases as write_to_file
 import utils.utils as utils
+from utils.types import ColType
 import pyperclip
-
-# Constants
-class ColType(Enum):
-    STRING = 1
-    NUMBER = 2
-    BOOLEAN = 3
-
-DEFAULT_NUM_COL_RANGE = [0,100]
 
 
 '''
@@ -191,16 +183,18 @@ if __name__ == "__main__":
     FOLDER_NAME = 'data'
     WF_NAME = 'UW_GuarantorKYC3_Auto'
     INPUT_COLS = [
-        "KYCLevel",
-        "KYCReason",
-        "Occupation",
-        "KYCLevelRM",
-        "KYCReasonRM",
+        "SubProduct",
+        "ProductProgram",
+        "BorrowerType",
+        ["IsAtLeastOneCondo", ColType.BOOLEAN],
+        ["BaseLTV", ColType.NUMBER, ">", [50, 100]],
+        ["BasedLTV", ColType.NUMBER, "<=", [60, 100]]
     ]
     OUTPUT_COLS = [
         ["Return", ColType.BOOLEAN],
         "OutcomeMessage"
     ]
+    DEFAULT_NUM_COL_RANGE = [0,100]
 
      # Create folder if not exists
     os.makedirs(FOLDER_NAME, exist_ok=True)
