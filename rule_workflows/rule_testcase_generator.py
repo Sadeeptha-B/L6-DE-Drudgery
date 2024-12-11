@@ -35,7 +35,7 @@ def generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True):
                 continue
 
         # Must be string
-        choice = f'"{option}"'
+        choice = f'"{option}"' if coltype != ColType.BOOLEAN else option
         tests.append(choice)
         debug_print(ind, data_options, choice, verbose)
 

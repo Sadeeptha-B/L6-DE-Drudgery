@@ -135,10 +135,10 @@ def generate_test_cases(cols, agg_data_arr, verbose_tests=False, postprocess=Tru
     return agg_tests, None
 
 
-def write_rule_testcases(inputcols, outputcols, agg_tests, output_agg, filepath):
+def write_rule_testcases(display_inputcols, outputcols, agg_tests, output_agg, filepath):
     # Preparing headers
     header_cols = ["*execute dm_DecisionMatrix"]
-    inputs_formatted = [f'input.{utils.camelcase(extract_col_data(col_data)[0])}' for col_data in inputcols]
+    inputs_formatted = [f'input.{extract_col_data(col_data)[0]}' for col_data in display_inputcols]
     outputs_formatted = [f"expected.*dm_DecisionMatrix.output.{extract_col_data(col_data)[0]}" for col_data in outputcols]
     header_cols.extend([*inputs_formatted, *outputs_formatted])
     header_cols.append("expected.*dm_DecisionMatrix.matchedRow")
@@ -181,7 +181,6 @@ if __name__ == "__main__":
     # ]
     
     FOLDER_NAME = 'data'
-    WF_NAME = 'UW_GuarantorKYC3_Auto'
     INPUT_COLS = [
         "SubProduct",
         "ProductProgram",
@@ -194,6 +193,7 @@ if __name__ == "__main__":
         ["Return", ColType.BOOLEAN],
         "OutcomeMessage"
     ]
+    TESTCASE_INPUT_COLS = ['subType', 'productProgram', 'borrowerType', 'baseLTV', 'basedLTV']
     DEFAULT_NUM_COL_RANGE = [0,100]
 
      # Create folder if not exists
@@ -221,5 +221,8 @@ if __name__ == "__main__":
     agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)
 
     # Write tests to file
-    testcase_filepath = utils.get_filepath(FOLDER_NAME, f'{WF_NAME}_vo_Testing_Review.xlsx')
-    write_rule_testcases(INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg, testcase_filepath)
+    wf_name = ''
+    while wf_name == '':
+        wf_name = input('Please specify rule workflow name:')
+    testcase_filepath = utils.get_filepath(FOLDER_NAME, f'{wf_name}_v0_Testing_Review.xlsx')
+    write_rule_testcases(TESTCASE_INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg, testcase_filepath)
