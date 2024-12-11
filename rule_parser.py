@@ -135,7 +135,12 @@ def generate_test_cases(cols, agg_data_arr, verbose_tests=False, postprocess=Tru
     return agg_tests, None
 
 
-def write_rule_testcases(display_inputcols, outputcols, agg_tests, output_agg, filepath):
+def write_rule_testcases(wf_name, display_inputcols, outputcols, agg_tests, output_agg):
+    # Confirm inputs
+    print("\nWriting test cases to file\n============================")
+    input(f"Confirm the following test case cols: {display_inputcols}")
+    filepath = utils.get_filepath(FOLDER_NAME, f'{wf_name}_v0_Testing_Review.xlsx')
+
     # Preparing headers
     header_cols = ["*execute dm_DecisionMatrix"]
     inputs_formatted = [f'input.{extract_col_data(col_data)[0]}' for col_data in display_inputcols]
@@ -151,6 +156,15 @@ def write_rule_testcases(display_inputcols, outputcols, agg_tests, output_agg, f
     data_agg = [*agg_tests, *output_agg]
 
     write_to_file(filepath, header_cols, data_agg)
+
+def generate_jira_markdown(wf_name):
+    print("\nGenerating Jira Output Markdown\n======================================")
+    wf_revision = input('Enter rule workflow revision: ')
+    url = f'https://console.nleadsdev.se.scb.co.th/#/workflows/edit/{wf_name}/0/{wf_revision}?workspace=default'
+    st = f'**Decision Workflow - [{wf_name}]({url})**\nTest cases -\nTest results-\nTest video-\n'
+    pyperclip.copy(st)
+    print(st)
+
 
 if __name__ == "__main__":
     # Example
@@ -193,7 +207,7 @@ if __name__ == "__main__":
         ["Return", ColType.BOOLEAN],
         "OutcomeMessage"
     ]
-    TESTCASE_INPUT_COLS = ['subType', 'productProgram', 'borrowerType', 'isAtLeastOneCondo', 'baseLTV', 'basedLTV']
+    TESTCASE_INPUT_COLS = ['subProduct', 'productProgram', 'borrowerType', 'isAtLeastOneCondo', 'baseLTV', 'basedLTV']
     DEFAULT_NUM_COL_RANGE = [0,100]
 
      # Create folder if not exists
@@ -221,8 +235,13 @@ if __name__ == "__main__":
     agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)
 
     # Write tests to file
-    wf_name = ''
-    while wf_name == '':
+    while True:
         wf_name = input('Please specify rule workflow name:')
-    testcase_filepath = utils.get_filepath(FOLDER_NAME, f'{wf_name}_v0_Testing_Review.xlsx')
-    write_rule_testcases(TESTCASE_INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg, testcase_filepath)
+        if wf_name != '':
+            break
+    
+    write_rule_testcases(wf_name, TESTCASE_INPUT_COLS, OUTPUT_COLS, agg_tests, output_agg)
+    generate_jira_markdown(wf_name)
+
+
+
