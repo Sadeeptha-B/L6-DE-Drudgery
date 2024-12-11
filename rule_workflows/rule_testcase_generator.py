@@ -19,7 +19,7 @@ def generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True):
         # Must be a string
         if len(data_options) > 1:
             choice = random.choice(data_options)
-            tests.append(choice)
+            tests.append(f'"{choice}"')
             debug_print(ind, data_options, choice, verbose)
             continue
 
@@ -77,13 +77,13 @@ def generate_numerical_testcases(colname, data_arr, operator, min_max, verbose=T
         if operator == "==":
             choice = option
         elif operator == "<=": 
-            choice = random.randint(option, MAX_VALUE)
-        elif operator == ">=":
             choice = random.randint(MIN_VALUE, option)
+        elif operator == ">=":
+            choice = random.randint(option, MAX_VALUE)
         elif operator == ">":
-            choice = random.randint(MIN_VALUE, option-1)
-        elif operator == "<":
             choice = random.randint(option + 1, MAX_VALUE)
+        elif operator == "<":
+            choice = random.randint(MIN_VALUE, option-1)
 
         tests.append(choice)
         debug_print(ind, data_options, choice, verbose)

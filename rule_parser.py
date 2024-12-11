@@ -193,7 +193,7 @@ if __name__ == "__main__":
         ["Return", ColType.BOOLEAN],
         "OutcomeMessage"
     ]
-    TESTCASE_INPUT_COLS = ['subType', 'productProgram', 'borrowerType', 'baseLTV', 'basedLTV']
+    TESTCASE_INPUT_COLS = ['subType', 'productProgram', 'borrowerType', 'isAtLeastOneCondo', 'baseLTV', 'basedLTV']
     DEFAULT_NUM_COL_RANGE = [0,100]
 
      # Create folder if not exists
@@ -214,8 +214,8 @@ if __name__ == "__main__":
     postprocess: Will return an output dict which aggregates the results row by with each column being a key
     '''
     # Process inputs and outputs
-    agg_data_arr = process_data(INPUT_COLS, show_data=True)
-    output_agg = process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
+    agg_data_arr = process_data(INPUT_COLS, show_data=False)
+    output_agg = process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
     
     # Test cases
     agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)
