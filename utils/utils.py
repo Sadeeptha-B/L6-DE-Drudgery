@@ -17,3 +17,9 @@ def get_filepath(folderpath, filename):
 def str_contains_quotes(s):
     quotes = ("'", '"')
     return len(s) != 0 and s[0] in quotes and s[len(s)-1] in quotes
+
+def strip_quotes(s):
+    return s[1:len(s)-1] if str_contains_quotes(s) else s
+
+def add_quotes_if_not_exist(s):
+    return s if str_contains_quotes(s) else f'"{s}"'

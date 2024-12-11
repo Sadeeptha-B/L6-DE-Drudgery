@@ -20,8 +20,8 @@ def generate_non_numerical_testcases(colname, coltype, data_arr, verbose=True):
         # Must be a string
         if len(data_options) > 1:
             option = random.choice(data_options)
-            choice = option if utils.str_contains_quotes(option) else f'"{option}"'
-            tests.append(f'"{choice}"')
+            choice = utils.add_quotes_if_not_exist(option)
+            tests.append(choice)
             debug_print(ind, data_options, choice, verbose)
             continue
 

@@ -41,7 +41,10 @@ def format_str(colname, coltype, elems, operator, is_output_cols=False):
     # Preprocessing - Check if string contains "" or ''
     # Do not add quotes if output_col
     if coltype == ColType.STRING and not is_output_cols:       
-        elems = [e if utils.str_contains_quotes(e) else f'"{e}"' for e in elems]
+        elems = [utils.add_quotes_if_not_exist(e) for e in elems]
+
+    if is_output_cols:
+        elems = [utils.strip_quotes(e) for e in elems]
 
     out = [f'{colname} {operator} {e}'.strip() for e in elems]
     return ' or '.join(out)
@@ -150,7 +153,7 @@ def write_rule_testcases(wf_name, display_inputcols, outputcols, agg_tests, outp
 
     # Preparing data
     # Assumes output_agg data is the data_arr result from process_data directly
-    output_agg = [[outrow[0] for outrow in outcol] for outcol in output_agg]
+    output_agg = [[utils.strip_quotes(outrow[0]) for outrow in outcol] for outcol in output_agg]
     row_count = len(output_agg[0])
     output_agg.append([i for i in range(1, row_count + 1)])
     data_agg = [*agg_tests, *output_agg]
@@ -198,17 +201,29 @@ if __name__ == "__main__":
     FOLDER_NAME = 'data'
     INPUT_COLS = [
         "SubProduct",
+        "SubProductFromScreen",
         "ProductProgram",
+        "BorrowerType",
+        "AMinusScoreGrade",
+        "HomeBuilderGrade",
+        ["IsCustomerSelfEmployed", ColType.BOOLEAN],
+        "CampaignCode",
+        ["IsTop4Developer_IsPackageLoan", ColType.BOOLEAN, [29050, 30050]],
         "ProjectCode",
-        "CreditLineType",
-        "CollateralType",
-        "NCBGrade"
+        "NPANPLCode",
+        ["IsIncomeOK", ColType.BOOLEAN],
+        ["AllSelfBorrowerTotalIncome", ColType.NUMBER],
+        ["IsPackageLoan", ColType.BOOLEAN],
+        ["IsGeneralGroup", ColType.BOOLEAN]
     ]
     OUTPUT_COLS = [
-        ["Return", ColType.NUMBER],
+        ["Return", ColType.BOOLEAN],
+        ["OutcomeMessage", ColType.STRING]
     ]
 
-    TESTCASE_INPUT_COLS = ['subProduct', 'productProgram', 'projectCode', 'creditLineType', 'collateralType', 'ncbGrade']
+    TESTCASE_INPUT_COLS = ['subProduct', 'subProductFromScreen', 'productProgram', 'borrowerType', 
+                          'a-ScoreGrade', 'homeBuilderGrade', 'isCustomerSelfEmployed', 'campaignCode', 'isTop4Developer_isPackageLoan',
+                           'projectCode', 'npanplCode', 'isIncomeOK', 'allSelfBorrowerTotalIncome', 'isPackageLoan', 'isGeneralGroup']
     DEFAULT_NUM_COL_RANGE = [0,100]
 
      # Create folder if not exists
@@ -229,7 +244,7 @@ if __name__ == "__main__":
     postprocess: Will return an output dict which aggregates the results row by with each column being a key
     '''
     # Process inputs and outputs
-    agg_data_arr = process_data(INPUT_COLS, show_data=True)
+    agg_data_arr = process_data(INPUT_COLS, show_data=False)
     output_agg = process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
     
     # Test cases

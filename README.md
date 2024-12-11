@@ -19,7 +19,7 @@ Limitations:
 - Each test case is generated independently. So, some testcases may be caught by a previous condition. You will have to manually edit these test cases to meet the specific condition oly
 
 ### Instructions to use
-1. [Create an environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) for the project using a package of your choice (venv or conda)
+1. [Create and activate an environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) for the project using a package of your choice (venv or conda)
 2. Install requirements with 
 ```pip install -r requirements. txt ```
 3. In `rule_parser.py`, add INPUT_COLS,OUTPUT_COLS, FOLDER_NAME as per the example format
