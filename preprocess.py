@@ -9,7 +9,7 @@ import json
 Receives application data from ADW and the raw inputs. This is the mapping function to prepare the data
 for the relevant workflow. You should change this mapping logic per workflow as per your needs. 
 '''
-def process_data(application_data, raw_inputs):
+def preprocess_data(application_data, raw_inputs):
     processed_input = []
 
     for input in raw_inputs:
@@ -39,9 +39,15 @@ def trigger_decision_engine(input_arr):
 def generate_output(index, input_dict, response_json):
     request_id, workflow_output = response_json["RequestId"], response_json["WorkflowOutput"]
     output = {"breRecords":  workflow_output["breRecords"]}
+    
+    # prettified json inputs and outputs
+    in_json = json.dumps(input_dict, indent=4)
+    out_json = json.dumps(output, indent=4)
+    print(f"Test case {index}\n========================\nInput:", in_json, "\n==================\nOutput:", out_json)
+
 
     url = f'https://console.nleadsdev.se.scb.co.th/#/report/modern/process/{request_id}?workspace=default'
-    return [index, json.dumps(input_dict), json.dumps(output), url]
+    return [index, in_json, out_json, url]
 
 
 # Execution 
@@ -57,7 +63,7 @@ def get_input_data(input_arr):
     workflow_output = rsp_json["WorkflowOutput"]
 
     # Data mapping logic - Change per wf
-    processed_input = process_data(workflow_output, raw_inputs)
+    processed_input = preprocess_data(workflow_output, raw_inputs)
     return processed_input
 
 '''

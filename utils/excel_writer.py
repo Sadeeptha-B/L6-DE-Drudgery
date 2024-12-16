@@ -20,15 +20,17 @@ def write_preprocess_testcases(filepath, headercols, output_agg):
     workbook = xlsxwriter.Workbook(filepath)
     worksheet = workbook.add_worksheet()
 
+    # Formatting settings
+    header_format = workbook.add_format({'bold': True, 'font_color': 'white', 'bg_color': "#156082"})
+    wrap_format = workbook.add_format({'text_wrap': True, 'valign': 'Top'})
+
     for col_no, header in enumerate(headercols):
-        worksheet.write(0, col_no, header)
+        worksheet.write(0, col_no, header, header_format)
     
     for row_no, row_data in enumerate(output_agg, 1):
         
         for col_no, cell_data, in enumerate(row_data):
-            print("==================\n")
-            print(cell_data)
-            print(type(cell_data))
-            worksheet.write(row_no, col_no, cell_data)
-
+            worksheet.set_column(col_no, col_no, 50) # Column width
+            worksheet.write(row_no, col_no, cell_data, wrap_format)
+    
     workbook.close()
