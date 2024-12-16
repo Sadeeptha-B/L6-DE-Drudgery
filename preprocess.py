@@ -57,6 +57,12 @@ Executing workflow to get data from ADW
 '''
 def get_input_data(input_arr):
     base_wfname, base_wfversion, base_wfrevision, user_id, auth_token, application_input, raw_inputs, *_= input_arr + [None]*3
+
+    while True:
+        res = input(f"Please validate the ADW Data workflow:\n===================================\nWF Details :{base_wfname}\\{base_wfversion}\\{base_wfrevision}")
+        if res == "y":
+            break
+
     http_headers, external_id = setup_params(auth_token, user_id)
 
     rsp_json = trigger_decision_engine([base_wfname, base_wfversion, base_wfrevision, external_id, application_input, http_headers])
@@ -72,12 +78,19 @@ General workflow execution
 def orchestrate_execution(input_arr, generate_testcases=True):
     wf_name, version, revision, user_id, inputs, auth_token, excel_folder, *_= input_arr + [None]*3
     concise_inputs, processed_inputs = inputs
+
+    while True:
+        res = input(f"\nPlease validate the Preprocess wf data:\n===================================\nWF Details :{wf_name}\\{version}\\{revision}\nInputs:\n{json.dumps(concise_inputs, indent=4)}")
+
+        if res == "y":
+            break
+    
     http_headers, external_id = setup_params(auth_token, user_id)
     output_agg = []
 
-    for row_no, input in enumerate(processed_inputs):
+    for row_no, proc_input in enumerate(processed_inputs):
         concise_input = concise_inputs[row_no]
-        resp_json= trigger_decision_engine([wf_name, version, revision, external_id, input, http_headers])
+        resp_json= trigger_decision_engine([wf_name, version, revision, external_id, proc_input, http_headers])
 
         # Format output
         out_arr = generate_output(row_no + 1, concise_input, resp_json)
