@@ -208,11 +208,11 @@ if __name__ == "__main__":
         "HomeBuilderGrade",
         ["IsCustomerSelfEmployed", ColType.BOOLEAN],
         "CampaignCode",
-        ["IsTop4Developer_IsPackageLoan", ColType.BOOLEAN, [29050, 30050]],
+        ["IsTop4Developer_IsPackageLoan", ColType.BOOLEAN],
         "ProjectCode",
         "NPANPLCode",
         ["IsIncomeOK", ColType.BOOLEAN],
-        ["AllSelfBorrowerTotalIncome", ColType.NUMBER],
+        ["AllSelfBorrowerTotalIncome", ColType.NUMBER, ">=" , [29050, 30050]],
         ["IsPackageLoan", ColType.BOOLEAN],
         ["IsGeneralGroup", ColType.BOOLEAN]
     ]
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     '''
     # Process inputs and outputs
     agg_data_arr = process_data(INPUT_COLS, show_data=False)
-    output_agg = process_data(OUTPUT_COLS, show_data=True, is_output_cols=True)
+    output_agg = process_data(OUTPUT_COLS, show_data=False, is_output_cols=True)
     
     # Test cases
     agg_tests, _= generate_test_cases(INPUT_COLS, agg_data_arr, verbose_tests=True, postprocess=False)
