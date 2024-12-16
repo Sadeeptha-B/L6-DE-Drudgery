@@ -1,8 +1,8 @@
 import requests
 from datetime import date
-from utils.excel_writer import write_preprocess_testcases 
-import os
+from utils.excel_writer import write_preprocess_testcases
 import json
+import os
 
 
 '''
@@ -36,18 +36,19 @@ def trigger_decision_engine(input_arr):
     return response.json()
 
 
-def generate_output(index, input_dict, response_json):
+def generate_output(index, concise_input, response_json):
     request_id, workflow_output = response_json["RequestId"], response_json["WorkflowOutput"]
-    output = {"breRecords":  workflow_output["breRecords"]}
+    bre_records_out = {"breRecords":  workflow_output["breRecords"]}
     
     # prettified json inputs and outputs
-    in_json = json.dumps(input_dict, indent=4)
-    out_json = json.dumps(output, indent=4)
-    print(f"Test case {index}\n========================\nInput:", in_json, "\n==================\nOutput:", out_json)
+    in_json = json.dumps(concise_input, indent=4)
+    out_json = json.dumps(workflow_output, indent=4)
+    bre_records_out_json = json.dumps(bre_records_out, indent=4)
+    print(f"Test case {index}\n========================\nInput:", in_json, "\n==================\nOutput:", bre_records_out_json)
 
 
     url = f'https://console.nleadsdev.se.scb.co.th/#/report/modern/process/{request_id}?workspace=default'
-    return [index, in_json, out_json, url]
+    return [index, in_json, out_json, bre_records_out_json, url]
 
 
 # Execution 
@@ -91,23 +92,27 @@ def orchestrate_execution(input_arr, generate_testcases=True):
     for row_no, proc_input in enumerate(processed_inputs):
         concise_input = concise_inputs[row_no]
         resp_json= trigger_decision_engine([wf_name, version, revision, external_id, proc_input, http_headers])
-
+    
         # Format output
-        out_arr = generate_output(row_no + 1, concise_input, resp_json)
-        output_agg.append(out_arr)
+        index, in_json, out_json, bre_records_out_json, url = generate_output(row_no + 1, concise_input, resp_json)
+        
+        # Write first case to SIT ENV file
+        if row_no == 0:
+            sit_header_cols = ["Process WF Test Case No", "Input Summary", "Input", "Expected output", "Recieved Output", "Report Link [DEV ENV]"]
+            filepath = os.path.join(os.getcwd(), excel_folder, 'SIT ENV Test case.xlsx')
+            record = [in_json, json.dumps(proc_input, indent=4), bre_records_out_json, out_json, url]
+            write_preprocess_testcases(filepath, sit_header_cols, [record])
+
+
+        # Excel header cols expect this format
+        output_agg.append([index, in_json, bre_records_out_json, url])
 
     if generate_testcases:
-        excel_header_cols = [
-            'Test Case No', 
-            'Input', 
-            'Output', 
-            f'Report Link for {wf_name} [DEV ENV]'
-        ]
-        filepath = os.path.join(os.getcwd(), excel_folder, f'TestCase-{PROCESS_WF_NAME}.xlsx')
-        write_preprocess_testcases(filepath, excel_header_cols, output_agg)
+        agg_header_cols = ['Test Case No', 'Input', 'Output', f'Report Link for {wf_name} [DEV ENV]']
+        filepath = os.path.join(os.getcwd(), excel_folder, f'TestCase-{wf_name}.xlsx')
+        write_preprocess_testcases(filepath, agg_header_cols, output_agg)
 
     return output_agg
-
 
 def setup_params(auth_token, user_id):
     http_headers = {
@@ -144,7 +149,7 @@ if __name__ == "__main__":
     RAW_INPUTS = [{'bklType': "Hit on AMLO Freeze04 List"}, {'bklType': "Hit on AMLO High Risk List"}, {'bklType': "Hit on WORLDCHECK"}, {'bklType': "string"}]
     
     # EPHYMERAL CONSTANTS (Changing per execution)
-    AUTH_TOKEN='Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJfcXFNcnNjMGZ2YmlOVFkxVGMtSEJQX2tpLVpwSDZ3X0R0SGJONVFMcnBjIn0.eyJleHAiOjE3MzQ0MDA1MDYsImlhdCI6MTczNDM2ODQ1MCwiYXV0aF90aW1lIjoxNzM0MzY0NTA2LCJqdGkiOiJiYjAwYWRiYy1kMDgxLTRlNjQtYWU2Ni05YjAzYjYwMzg1ZjgiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLm5sZWFkc2Rldi5zZS5zY2IuY28udGgvcmVhbG1zL25sZWFkcy1kZXYiLCJhdWQiOlsibXMta2V5Y2xvYWsiLCJiYWNrb2ZmaWNlIiwiYWNjb3VudCJdLCJzdWIiOiJjOGRkOTdkYS05ZmFkLTRmOGItODI3YS1kMDE1MWIzYWE4MDQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb25zb2xlIiwic2lkIjoiNjc5ZWE5NDctYjBjNS00NDdiLTgyNDctNWU2YWE4OGJkMTgyIiwiYWNyIjoiMCIsInNjb3BlIjoiZW1haWwgZGF0YXByb3ZpZGVycyBvcGVuaWQgbW9kZWxzIHByb2ZpbGUgYWNyIGNvbmZpZ3VyYXRpb25BcGkgYXVkaXQgdXNlcmRhdGEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGUiOlsiRGVjaXNpb25FbmdpbmVXb3JrZmxvd0VkaXRvciIsImRlZmF1bHQtcm9sZXMtbWFzdGVyIiwiR3JhZmFuYUFkbWluaXN0cmF0b3IiLCJEZWNpc2lvbkVuZ2luZVByb3RlY3RlZERhdGFWaWV3ZXIiLCJBRFdBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVSZXBvcnRWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVJlY292ZXJ5TWFuYWdlciIsIkRlY2lzaW9uRW5naW5lQXVkaXRWaWV3ZXIiLCJBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVXb3JrZmxvd1NpZ25lciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dFeGVjdXRvciIsIm9mZmxpbmVfYWNjZXNzIiwiQk9Vc2VyIiwidW1hX2F1dGhvcml6YXRpb24iLCJEZWNpc2lvbkVuZ2luZVdvcmtmbG93Vmlld2VyIl0sIm5hbWUiOiJzYWRlZXB0aGFiIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2FkZWVwdGhhYiJ9.MtvExjCRlFGaqOxD_wFpuKoj-cD6KptsBWkF2pVEr5RrJBmHD_zFkynJR8BIAbT8z9aftd7jVHv2PlyfsVkwPrHHZL2TzEwU62Xr0bwS5Bf799rIyWVUSjg0qIe1Qp05o8OT6Yh7GVeAZUe-bEzUhiMWugnJviB82JoXEofoSK2GCfk7DElIvdtHsCw-9XnaO_LFAAGQtqP-80uWjMO4DDXKkroaTVK56QC1ss9-KtJ9SdWJRK-iC0Pvy3OIyRFGsUlQm7nZw5ygxR8SWh134s35QHrrhXN4z_OB_-MPrW8XHqgJiilOFbmhgbOr6GpDsIgodnWzOwaNjDaMcmqlBA'
+    AUTH_TOKEN='Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJfcXFNcnNjMGZ2YmlOVFkxVGMtSEJQX2tpLVpwSDZ3X0R0SGJONVFMcnBjIn0.eyJleHAiOjE3MzQ0MDA1MDYsImlhdCI6MTczNDM3NTc1NiwiYXV0aF90aW1lIjoxNzM0MzY0NTA2LCJqdGkiOiJjNWRjMTc2Mi1lNzA5LTRkYTUtOTEwYS05NmIyNDgxZGJmNDQiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLm5sZWFkc2Rldi5zZS5zY2IuY28udGgvcmVhbG1zL25sZWFkcy1kZXYiLCJhdWQiOlsibXMta2V5Y2xvYWsiLCJiYWNrb2ZmaWNlIiwiYWNjb3VudCJdLCJzdWIiOiJjOGRkOTdkYS05ZmFkLTRmOGItODI3YS1kMDE1MWIzYWE4MDQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb25zb2xlIiwic2lkIjoiNjc5ZWE5NDctYjBjNS00NDdiLTgyNDctNWU2YWE4OGJkMTgyIiwiYWNyIjoiMCIsInNjb3BlIjoiZW1haWwgZGF0YXByb3ZpZGVycyBvcGVuaWQgbW9kZWxzIHByb2ZpbGUgYWNyIGNvbmZpZ3VyYXRpb25BcGkgYXVkaXQgdXNlcmRhdGEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGUiOlsiRGVjaXNpb25FbmdpbmVXb3JrZmxvd0VkaXRvciIsImRlZmF1bHQtcm9sZXMtbWFzdGVyIiwiR3JhZmFuYUFkbWluaXN0cmF0b3IiLCJEZWNpc2lvbkVuZ2luZVByb3RlY3RlZERhdGFWaWV3ZXIiLCJBRFdBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVSZXBvcnRWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVJlY292ZXJ5TWFuYWdlciIsIkRlY2lzaW9uRW5naW5lQXVkaXRWaWV3ZXIiLCJBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVXb3JrZmxvd1NpZ25lciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dFeGVjdXRvciIsIm9mZmxpbmVfYWNjZXNzIiwiQk9Vc2VyIiwidW1hX2F1dGhvcml6YXRpb24iLCJEZWNpc2lvbkVuZ2luZVdvcmtmbG93Vmlld2VyIl0sIm5hbWUiOiJzYWRlZXB0aGFiIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2FkZWVwdGhhYiJ9.WVjpISue5yKfQ8_qbjkH7Sav5GH8RdbnPUJisvlxL7pQix6ic9ZvCRzQRyHLzViDuxIlWg0UItBDW5ktHMiZa3hPf2NtmPLu-lE9sXz3rzhFKqA95ckB_bxdnL7cUs5dPgdEISnACitF-N53hlKt6AWvOU7XWjZu8JG2Jw2-DsR0SGQ136dm0EB1gifREOOWAJVngMLS9f1sJ-vgNP8OEZBppUGIksyYdfWut-i9XzrymJ7KM3FWAFcDevWE1EYS8yKrGQ_k50T16tlj0wE8wlnc1PHB1eHKG-dT0pujGYvfvfaB0M7-C71klfQ_NotVFl0qXEucvcH0cJLvBs4uxg'
 
     # Fetch data from ADW, called base wf
     processed_inputs = get_input_data(['NGL_AutoProcess_GetDependentADWData', 0, 230, USER_ID, 
