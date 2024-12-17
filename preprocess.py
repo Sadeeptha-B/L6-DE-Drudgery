@@ -55,7 +55,7 @@ def generate_output(index, concise_input, response_json):
 def generate_jira_markdown(wf_name, wf_revision):
     print("\nGenerating Jira Output Markdown\n======================================")
     url = f'https://console.nleadsdev.se.scb.co.th/#/workflows/edit/{wf_name}/0/{wf_revision}?workspace=default'
-    st = f'**Test Cases - Process WF - [{wf_name}]({url})**\nTest cases -\nProof video -\n SIT ENV Test Cases -'
+    st = f'**Test Cases - Process WF - [{wf_name}]({url})**\nTest cases -\nProof video -\nSIT ENV Test Cases -'
     pyperclip.copy(st)
     print(st)
 
@@ -105,10 +105,10 @@ def orchestrate_execution(input_arr, generate_testcases=True):
         index, in_json, out_json, bre_records_out_json, url = generate_output(row_no + 1, concise_input, resp_json)
         
         # Write first case to SIT ENV file
-        if row_no == 0:
+        if row_no == 0 and generate_testcases:
             sit_header_cols = ["Process WF Test Case No", "Input Summary", "Input", "Expected output", "Recieved Output", "Report Link [DEV ENV]"]
             filepath = os.path.join(os.getcwd(), excel_folder, 'SIT ENV Test case.xlsx')
-            record = [in_json, json.dumps(proc_input, indent=4), bre_records_out_json, out_json, url]
+            record = [index, in_json, json.dumps(proc_input, indent=4), bre_records_out_json, out_json, url]
             write_preprocess_testcases(filepath, sit_header_cols, [record])
 
 
@@ -161,12 +161,12 @@ if __name__ == "__main__":
     AUTH_TOKEN='Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJfcXFNcnNjMGZ2YmlOVFkxVGMtSEJQX2tpLVpwSDZ3X0R0SGJONVFMcnBjIn0.eyJleHAiOjE3MzQ0MDA1MDYsImlhdCI6MTczNDM3NTc1NiwiYXV0aF90aW1lIjoxNzM0MzY0NTA2LCJqdGkiOiJjNWRjMTc2Mi1lNzA5LTRkYTUtOTEwYS05NmIyNDgxZGJmNDQiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLm5sZWFkc2Rldi5zZS5zY2IuY28udGgvcmVhbG1zL25sZWFkcy1kZXYiLCJhdWQiOlsibXMta2V5Y2xvYWsiLCJiYWNrb2ZmaWNlIiwiYWNjb3VudCJdLCJzdWIiOiJjOGRkOTdkYS05ZmFkLTRmOGItODI3YS1kMDE1MWIzYWE4MDQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb25zb2xlIiwic2lkIjoiNjc5ZWE5NDctYjBjNS00NDdiLTgyNDctNWU2YWE4OGJkMTgyIiwiYWNyIjoiMCIsInNjb3BlIjoiZW1haWwgZGF0YXByb3ZpZGVycyBvcGVuaWQgbW9kZWxzIHByb2ZpbGUgYWNyIGNvbmZpZ3VyYXRpb25BcGkgYXVkaXQgdXNlcmRhdGEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGUiOlsiRGVjaXNpb25FbmdpbmVXb3JrZmxvd0VkaXRvciIsImRlZmF1bHQtcm9sZXMtbWFzdGVyIiwiR3JhZmFuYUFkbWluaXN0cmF0b3IiLCJEZWNpc2lvbkVuZ2luZVByb3RlY3RlZERhdGFWaWV3ZXIiLCJBRFdBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVSZXBvcnRWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVJlY292ZXJ5TWFuYWdlciIsIkRlY2lzaW9uRW5naW5lQXVkaXRWaWV3ZXIiLCJBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVXb3JrZmxvd1NpZ25lciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dFeGVjdXRvciIsIm9mZmxpbmVfYWNjZXNzIiwiQk9Vc2VyIiwidW1hX2F1dGhvcml6YXRpb24iLCJEZWNpc2lvbkVuZ2luZVdvcmtmbG93Vmlld2VyIl0sIm5hbWUiOiJzYWRlZXB0aGFiIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2FkZWVwdGhhYiJ9.WVjpISue5yKfQ8_qbjkH7Sav5GH8RdbnPUJisvlxL7pQix6ic9ZvCRzQRyHLzViDuxIlWg0UItBDW5ktHMiZa3hPf2NtmPLu-lE9sXz3rzhFKqA95ckB_bxdnL7cUs5dPgdEISnACitF-N53hlKt6AWvOU7XWjZu8JG2Jw2-DsR0SGQ136dm0EB1gifREOOWAJVngMLS9f1sJ-vgNP8OEZBppUGIksyYdfWut-i9XzrymJ7KM3FWAFcDevWE1EYS8yKrGQ_k50T16tlj0wE8wlnc1PHB1eHKG-dT0pujGYvfvfaB0M7-C71klfQ_NotVFl0qXEucvcH0cJLvBs4uxg'
 
     # # Fetch data from ADW, called base wf
-    # processed_inputs = get_input_data(['NGL_AutoProcess_GetDependentADWData', 0, 230, USER_ID, 
-    #                                         AUTH_TOKEN, {"applicationId": "APP191000101V"}, RAW_INPUTS])
+    processed_inputs = get_input_data(['NGL_AutoProcess_GetDependentADWData', 0, 230, USER_ID, 
+                                            AUTH_TOKEN, {"applicationId": "APP191000101V"}, RAW_INPUTS])
     
     
-    # inputs = [RAW_INPUTS, processed_inputs]
-    # orchestrate_execution([PROCESS_WF_NAME, WF_VERSION, WF_REVISION, USER_ID, inputs, AUTH_TOKEN, FOLDERNAME], RAW_INPUTS)
+    inputs = [RAW_INPUTS, processed_inputs]
+    orchestrate_execution([PROCESS_WF_NAME, WF_VERSION, WF_REVISION, USER_ID, inputs, AUTH_TOKEN, FOLDERNAME], RAW_INPUTS)
 
     generate_jira_markdown(PROCESS_WF_NAME, WF_REVISION)
     
