@@ -38,5 +38,7 @@ To do so, modify the params under main to match the relevant workflow
 
 Then you will have to modify the mapping logic where you map your RAW INPUTS to the application data schema format. 
 
+Make sure you enter the updated AUTH TOKEN, you can view this from the Network tab in your brower inspect window
+
 Once that is done, simply run ``python preprocess.py``
 

@@ -17,8 +17,9 @@ def preprocess_data(application_data, raw_inputs):
         copy = json.loads(json.dumps(application_data)) # Deep copy dictionary
         systemverifies = copy["applicationDetails"]["systemverifies"]
         verify = systemverifies[0]
-        cdd = verify["appl_systemverify_cdds"][0]
-        cdd["appl_systemverify_cdd_alerts"][0]["message"] = input["bklType"]
+        verify["appl_systemverify_frauds"] = input["appl_systemverify_frauds"]
+        # pep = verify["appl_systemverify_peps"][0]
+        # pep["appl_systemverify_pep_lists"] = input["appl_systemverify_pep_lists"]
         processed_input.append(copy)
 
     return processed_input
@@ -33,7 +34,6 @@ def trigger_decision_engine(input_arr):
         headers=http_headers,
         json= data_input
     )
-
     return response.json()
 
 
@@ -150,12 +150,26 @@ def setup_params(auth_token, user_id):
 
 if __name__ == "__main__": 
     # CONSTANTS
-    PROCESS_WF_NAME = 'UW_CDDUnsecured_Preprocess'
+    PROCESS_WF_NAME = 'UW_Chck_FraudUnsecured_Preprocess'
     WF_VERSION=0
     WF_REVISION=7
     USER_ID='sadeepthab'
     FOLDERNAME = 'data'
-    RAW_INPUTS = [{'bklType': "Hit on AMLO Freeze04 List"}, {'bklType': "Hit on AMLO High Risk List"}, {'bklType': "Hit on WORLDCHECK"}, {'bklType': "string"}]
+    RAW_INPUTS = [{"productTypeId": "string", "appl_systemverify_frauds": [
+          {
+            "id": "79e11990-822d-11ef-b456-3f63c2fa71c5",
+            "found_status": "Found",
+            "is_validate_person": None,
+            "create_date_time": "2024-10-04T15:48:50.0000000+07:00"
+          }
+        ]}, {"productTypeId": "string", "appl_systemverify_frauds": [
+          {
+            "id": "79e11990-822d-11ef-b456-3f63c2fa71c5",
+            "found_status": "Found",
+            "is_validate_person": True,
+            "create_date_time": "2024-10-04T15:48:50.0000000+07:00"
+          }
+        ]}]
     
     # EPHYMERAL CONSTANTS (Changing per execution)
     AUTH_TOKEN='Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJfcXFNcnNjMGZ2YmlOVFkxVGMtSEJQX2tpLVpwSDZ3X0R0SGJONVFMcnBjIn0.eyJleHAiOjE3MzQ0MDA1MDYsImlhdCI6MTczNDM3NTc1NiwiYXV0aF90aW1lIjoxNzM0MzY0NTA2LCJqdGkiOiJjNWRjMTc2Mi1lNzA5LTRkYTUtOTEwYS05NmIyNDgxZGJmNDQiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLm5sZWFkc2Rldi5zZS5zY2IuY28udGgvcmVhbG1zL25sZWFkcy1kZXYiLCJhdWQiOlsibXMta2V5Y2xvYWsiLCJiYWNrb2ZmaWNlIiwiYWNjb3VudCJdLCJzdWIiOiJjOGRkOTdkYS05ZmFkLTRmOGItODI3YS1kMDE1MWIzYWE4MDQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb25zb2xlIiwic2lkIjoiNjc5ZWE5NDctYjBjNS00NDdiLTgyNDctNWU2YWE4OGJkMTgyIiwiYWNyIjoiMCIsInNjb3BlIjoiZW1haWwgZGF0YXByb3ZpZGVycyBvcGVuaWQgbW9kZWxzIHByb2ZpbGUgYWNyIGNvbmZpZ3VyYXRpb25BcGkgYXVkaXQgdXNlcmRhdGEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGUiOlsiRGVjaXNpb25FbmdpbmVXb3JrZmxvd0VkaXRvciIsImRlZmF1bHQtcm9sZXMtbWFzdGVyIiwiR3JhZmFuYUFkbWluaXN0cmF0b3IiLCJEZWNpc2lvbkVuZ2luZVByb3RlY3RlZERhdGFWaWV3ZXIiLCJBRFdBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVSZXBvcnRWaWV3ZXIiLCJEZWNpc2lvbkVuZ2luZVJlY292ZXJ5TWFuYWdlciIsIkRlY2lzaW9uRW5naW5lQXVkaXRWaWV3ZXIiLCJBZG1pbmlzdHJhdG9yIiwiRGVjaXNpb25FbmdpbmVXb3JrZmxvd1NpZ25lciIsIkRlY2lzaW9uRW5naW5lV29ya2Zsb3dFeGVjdXRvciIsIm9mZmxpbmVfYWNjZXNzIiwiQk9Vc2VyIiwidW1hX2F1dGhvcml6YXRpb24iLCJEZWNpc2lvbkVuZ2luZVdvcmtmbG93Vmlld2VyIl0sIm5hbWUiOiJzYWRlZXB0aGFiIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2FkZWVwdGhhYiJ9.WVjpISue5yKfQ8_qbjkH7Sav5GH8RdbnPUJisvlxL7pQix6ic9ZvCRzQRyHLzViDuxIlWg0UItBDW5ktHMiZa3hPf2NtmPLu-lE9sXz3rzhFKqA95ckB_bxdnL7cUs5dPgdEISnACitF-N53hlKt6AWvOU7XWjZu8JG2Jw2-DsR0SGQ136dm0EB1gifREOOWAJVngMLS9f1sJ-vgNP8OEZBppUGIksyYdfWut-i9XzrymJ7KM3FWAFcDevWE1EYS8yKrGQ_k50T16tlj0wE8wlnc1PHB1eHKG-dT0pujGYvfvfaB0M7-C71klfQ_NotVFl0qXEucvcH0cJLvBs4uxg'
@@ -168,7 +182,7 @@ if __name__ == "__main__":
     inputs = [RAW_INPUTS, processed_inputs]
     orchestrate_execution([PROCESS_WF_NAME, WF_VERSION, WF_REVISION, USER_ID, inputs, AUTH_TOKEN, FOLDERNAME], RAW_INPUTS)
 
-    generate_jira_markdown(PROCESS_WF_NAME, WF_REVISION)
+    # generate_jira_markdown(PROCESS_WF_NAME, WF_REVISION)
     
 
 
