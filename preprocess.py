@@ -52,12 +52,14 @@ def generate_output(index, concise_input, response_json):
     url = f'https://console.nleadsdev.se.scb.co.th/#/report/modern/process/{request_id}?workspace=default'
     return [index, in_json, out_json, bre_records_out_json, url]
 
+
 def generate_jira_markdown(wf_name, wf_revision):
     print("\nGenerating Jira Output Markdown\n======================================")
     url = f'https://console.nleadsdev.se.scb.co.th/#/workflows/edit/{wf_name}/0/{wf_revision}?workspace=default'
     st = f'**Test Cases - Process WF - [{wf_name}]({url})**\nTest cases -\nProof video -\nSIT ENV Test Cases -'
     pyperclip.copy(st)
     print(st)
+
 
 # Execution 
 # ==========================================================================================
@@ -81,6 +83,7 @@ def get_input_data(input_arr):
     processed_input = preprocess_data(workflow_output, raw_inputs)
     return processed_input
 
+
 '''
 General workflow execution
 '''
@@ -90,7 +93,6 @@ def orchestrate_execution(input_arr, generate_testcases=True):
 
     while True:
         res = input(f"\nPlease validate the Preprocess wf data:\n===================================\nWF Details :{wf_name}\\{version}\\{revision}\nInputs:\n{json.dumps(concise_inputs, indent=4)}")
-
         if res == "y":
             break
     
@@ -111,8 +113,7 @@ def orchestrate_execution(input_arr, generate_testcases=True):
             record = [index, in_json, json.dumps(proc_input, indent=4), bre_records_out_json, out_json, url]
             write_preprocess_testcases(filepath, sit_header_cols, [record])
 
-
-        # Excel header cols expect this format
+        # Agg header cols expect this format
         output_agg.append([index, in_json, bre_records_out_json, url])
 
     if generate_testcases:
@@ -122,6 +123,7 @@ def orchestrate_execution(input_arr, generate_testcases=True):
         generate_jira_markdown(wf_name, revision)
 
     return output_agg
+
 
 def setup_params(auth_token, user_id):
     http_headers = {

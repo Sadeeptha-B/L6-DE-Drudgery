@@ -34,9 +34,9 @@ Limitations:
 
 The tool can generate your SIT ENV Test case.xlsx file as well as the general test case file. 
 To do so, modify the params under main to match the relevant workflow
-(PROCESS_WF_NAME, WF_VERSION, WF_REVISION, USER_ID, RAW_INPUTS)
+(`PROCESS_WF_NAME, WF_VERSION, WF_REVISION, USER_ID, RAW_INPUTS`)
 
-Then you will have to modify the mapping logic where you map your RAW INPUTS to the application data schema format. (You will have to modify the function preprocess_data for this)
+Then you will have to modify the mapping logic where you map your RAW INPUTS to the application data schema format. You only need to modify the function `preprocess_data` as needed, to achieve this.
 
 Make sure you enter the updated AUTH TOKEN, you can view this from the Network tab in your brower inspect window
 
